@@ -1,6 +1,6 @@
 function pageScript() {
   let speedConfig = {
-    speed: 0,
+    speed: 0.69,
     cbSetIntervalChecked: true,
     cbSetTimeoutChecked: false,
     cbPerformanceNowChecked: false,
