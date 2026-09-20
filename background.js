@@ -1,4 +1,15 @@
-async function setDateNowState(enabled) {
+// background.js
+chrome.runtime.onInstalled.addListener((details) => {
+  // Verifica se é uma instalação ou atualização
+  if (details.reason === "install" || details.reason === "update") {
+    // Abre o link do PayPal em uma nova aba
+    chrome.tabs.create({
+      url: "https://www.paypal.com/donate/?hosted_button_id=WBGKBJ73EDAW2"
+    });
+  }
+});
+
+async function setDateNowExtensionStateInOpenTabs(enabled) {
   const tabs = await chrome.tabs.query({});
 
   for (const tab of tabs) {
@@ -6,26 +17,31 @@ async function setDateNowState(enabled) {
 
     try {
       await chrome.scripting.executeScript({
-        target: {tabId: tab.id, allFrames: true},
+        target: { tabId: tab.id, allFrames: true },
         world: "MAIN",
-        func: (state) => {
+        func: (extensionEnabled) => {
           window.postMessage({
             command: "setExtensionDateNowState",
-            enabled: state
+            enabled: extensionEnabled,
           });
         },
-        args: [enabled]
+        args: [enabled],
       });
-    } catch (e) {
-      console.debug("CHICK+ state update failed", e);
+    } catch (error) {
+      console.debug("Could not change Date.now state in tab", tab.id, error);
     }
   }
 }
 
+// Force cbDateNowChecked=false immediately when this extension is disabled.
 chrome.management.onDisabled.addListener((info) => {
-  if (info.id === chrome.runtime.id) setDateNowState(false);
+  if (info.id !== chrome.runtime.id) return;
+  setDateNowExtensionStateInOpenTabs(false);
 });
 
+// Restore cbDateNowChecked=true when this extension is enabled again.
 chrome.management.onEnabled.addListener((info) => {
-  if (info.id === chrome.runtime.id) setDateNowState(true);
+  if (info.id !== chrome.runtime.id) return;
+
+  setDateNowExtensionStateInOpenTabs(true);
 });

@@ -1,12 +1,23 @@
 {
+  "update_url": "https://clients2.google.com/service/update2/crx",
   "manifest_version": 3,
-  "name": "CHICK+",
-  "description": "HTML5 speed control extension with Date.now support.",
-  "version": "13.0.0",
-  "permissions": ["management", "scripting", "tabs"],
-  "host_permissions": ["<all_urls>"],
+  "name": "HTML5 Universal Speed Hack",
+  "description": "Speeds up or slows down browser games, HTML5 and more...",
+  "version": "12.0",
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "permissions": [
+    "management",
+    "scripting",
+    "tabs"
+  ],
+  "icons": {
+    "162": "icon.png"
+  },
   "action": {
-    "default_title": "CHICK+",
+    "default_icon": "icon.png",
+    "default_title": "HTML5 Universal Speed Hack Free",
     "default_popup": "index.html"
   },
   "background": {
@@ -14,17 +25,17 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
       "all_frames": true,
       "world": "MAIN",
       "run_at": "document_start",
-      "js": ["pageScript.js"]
+      "matches": ["<all_urls>"],
+      "js": ["pageScript.js", "dateNowRefresh.js"]
     },
     {
-      "matches": ["<all_urls>"],
       "all_frames": true,
       "world": "ISOLATED",
       "run_at": "document_start",
+      "matches": ["<all_urls>"],
       "js": ["contentScript.js"]
     }
   ]
