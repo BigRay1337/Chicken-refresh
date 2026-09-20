@@ -6,7 +6,6 @@
 
   // Full-page refresh behavior imported from Chicken-refresh.
   // Keep the existing two game-refresh layers as an additional layer.
-  const PAGE_REFRESH_DELAY_MS = 1000;
   const REFRESH_DELAY_MS = 900;
   const STATE_2_DELAY_MS = 900;
 
@@ -14,7 +13,6 @@
   let dateNowValue = originalDateNow();
   let previusDateNowValue = dateNowValue;
   let refreshScheduled = false;
-  let pageRefreshScheduled = false;
   let previousDateNowChecked = null;
 
   Date.now = function () {
@@ -123,23 +121,9 @@
       if (previousDateNowChecked === true && checked === false) {
         refreshDateNowLayers();
 
-        // Chicken-refresh behavior: reload the whole page after 60 ms.
-        // Use the original timer so pageScript timer scaling cannot change it.
-        if (!pageRefreshScheduled) {
-          pageRefreshScheduled = true;
-          originalSetTimeout(function () {
-            try {
-              window.location.reload();
-            } catch (error) {
-              pageRefreshScheduled = false;
-              console.error("Date.now page refresh failed", error);
-            }
-          }, PAGE_REFRESH_DELAY_MS);
-        }
       }
 
       previousDateNowChecked = checked;
     }
   });
 })();
-();
