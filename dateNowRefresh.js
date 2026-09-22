@@ -1,12 +1,12 @@
-// Refresh only the Java/HTML5 game when Date.now is disabled.
-// Does not reload the entire website.
+// Combine website refresh with a force-refresh of the detected Java/HTML5 game.
+// Sequence on a Date.now disable transition: force-refresh game at 0 ms,
+// then reload the website at 1000 ms. The 0 -> 1000 ms delay is preserved.
 (function () {
   let previousEnabled = null;
-  let refreshScheduled = false;
+  let refreshCycleScheduled = false;
   let nextRefreshDelay = 0;
 
-  function refreshGameOnly() {
-    // Force-refresh only the detected game container; never reload the whole website.
+  function forceRefreshGame() {
     const applet = document.querySelector(
       'applet, object[type="application/x-java-applet"], ' +
       'embed[type="application/x-java-applet"], ' +
@@ -14,24 +14,24 @@
     );
 
     if (applet && applet.parentNode) {
-      refreshScheduled = true;
       const replacement = applet.cloneNode(true);
       applet.parentNode.replaceChild(replacement, applet);
-      window.setTimeout(function () {
-        refreshScheduled = false;
-      }, 1000);
-      return;
+      return true;
     }
 
     const frame = Array.from(document.querySelectorAll("iframe")).find(function (f) {
       const value = ((f.src || "") + " " + (f.id || "") + " " +
-        (typeof f.className === "string" ? f.className : "") + " " + (f.title || "")).toLowerCase();
-      return value.includes("java") || value.includes("applet") || value.includes("game");
+        (typeof f.className === "string" ? f.className : "") + " " +
+        (f.title || "")).toLowerCase();
+
+      return value.includes("java") ||
+             value.includes("applet") ||
+             value.includes("game");
     });
 
     if (frame && frame.parentNode) {
-      refreshScheduled = true;
       const src = frame.getAttribute("src");
+
       if (src) {
         frame.src = "about:blank";
         window.setTimeout(function () {
@@ -40,10 +40,16 @@
       } else {
         frame.parentNode.replaceChild(frame.cloneNode(true), frame);
       }
-      window.setTimeout(function () {
-        refreshScheduled = false;
-      }, 1000);
+
+      return true;
     }
+
+    return false;
+  }
+
+  function refreshWebsite() {
+    // Full website refresh after the 1000 ms delay.
+    window.location.reload();
   }
 
   window.addEventListener("message", function (event) {
@@ -58,148 +64,33 @@
     }
 
     if (enabled === false && previousEnabled === true) {
-      // Keep the requested sequence: 0 ms, then 1000 ms, then repeat.
-      const refreshDelay = nextRefreshDelay;
+      if (refreshCycleScheduled) {
+        previousEnabled = enabled;
+        return;
+      }
+
+      refreshCycleScheduled = true;
+
+      // Preserve the 0 -> 1000 ms sequence.
+      const gameDelay = nextRefreshDelay;
+      const websiteDelay = gameDelay === 0 ? 1000 : 0;
       nextRefreshDelay = nextRefreshDelay === 0 ? 1000 : 0;
 
+      // Force-refresh the game first.
       window.setTimeout(function () {
-        refreshGameOnly();
-      }, refreshDelay);
+        forceRefreshGame();
+      }, gameDelay);
+
+      // Then refresh the complete website after the long delay.
+      window.setTimeout(function () {
+        refreshWebsite();
+      }, websiteDelay);
     }
 
     if (enabled === true) {
-      refreshScheduled = false;
+      refreshCycleScheduled = false;
     }
 
     previousEnabled = enabled;
   });
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
