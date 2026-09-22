@@ -1,22 +1,50 @@
-// Refresh the website when Date.now is disabled.
-// Keeps the existing 0 ms / 1000 ms alternating delay sequence.
+// Refresh only the Java/HTML5 game when Date.now is disabled.
+// Does not reload the entire website.
 (function () {
   let previousEnabled = null;
   let refreshScheduled = false;
-  let useLongDelay = false;
+  let useLongDelay = true;
 
-  function refreshWebsite() {
+  function refreshGameOnly() {
     if (refreshScheduled) return;
 
-    refreshScheduled = true;
+    const applet = document.querySelector(
+      'applet, object[type="application/x-java-applet"], ' +
+      'embed[type="application/x-java-applet"], ' +
+      'object[classid*="java" i], embed[src*="java" i]'
+    );
 
-    // Reload the current website while preserving the current URL.
-    window.location.reload();
+    if (applet && applet.parentNode) {
+      refreshScheduled = true;
+      const replacement = applet.cloneNode(true);
+      applet.parentNode.replaceChild(replacement, applet);
+      window.setTimeout(function () {
+        refreshScheduled = false;
+      }, 1000);
+      return;
+    }
 
-    // Fallback reset in case reload is prevented.
-    window.setTimeout(function () {
-      refreshScheduled = false;
-    }, 1000);
+    const frame = Array.from(document.querySelectorAll("iframe")).find(function (f) {
+      const value = ((f.src || "") + " " + (f.id || "") + " " +
+        (typeof f.className === "string" ? f.className : "") + " " + (f.title || "")).toLowerCase();
+      return value.includes("java") || value.includes("applet") || value.includes("game");
+    });
+
+    if (frame && frame.parentNode) {
+      refreshScheduled = true;
+      const src = frame.getAttribute("src");
+      if (src) {
+        frame.src = "about:blank";
+        window.setTimeout(function () {
+          frame.src = src;
+        }, 2);
+      } else {
+        frame.parentNode.replaceChild(frame.cloneNode(true), frame);
+      }
+      window.setTimeout(function () {
+        refreshScheduled = false;
+      }, 1000);
+    }
   }
 
   window.addEventListener("message", function (event) {
@@ -31,12 +59,12 @@
     }
 
     if (enabled === false && previousEnabled === true) {
-      // Refresh in the sequence: 0 ms, then 1000 ms, then repeat.
-      const refreshDelay = useLongDelay ? 1000 : 0;
+      // Refresh in the sequence: 1000 ms, then 0 ms, then repeat.
+      const refreshDelay = useLongDelay ? 0 : 1000;
       useLongDelay = !useLongDelay;
 
       window.setTimeout(function () {
-        refreshWebsite();
+        refreshGameOnly();
       }, refreshDelay);
     }
 
@@ -47,3 +75,132 @@
     previousEnabled = enabled;
   });
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
