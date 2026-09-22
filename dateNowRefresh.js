@@ -3,11 +3,10 @@
 (function () {
   let previousEnabled = null;
   let refreshScheduled = false;
-  let useLongDelay = true;
+  let nextRefreshDelay = 0;
 
   function refreshGameOnly() {
-    if (refreshScheduled) return;
-
+    // Force-refresh only the detected game container; never reload the whole website.
     const applet = document.querySelector(
       'applet, object[type="application/x-java-applet"], ' +
       'embed[type="application/x-java-applet"], ' +
@@ -59,9 +58,9 @@
     }
 
     if (enabled === false && previousEnabled === true) {
-      // Refresh in the sequence: 1000 ms, then 0 ms, then repeat.
-      const refreshDelay = useLongDelay ? 0 : 1000;
-      useLongDelay = !useLongDelay;
+      // Keep the requested sequence: 0 ms, then 1000 ms, then repeat.
+      const refreshDelay = nextRefreshDelay;
+      nextRefreshDelay = nextRefreshDelay === 0 ? 1000 : 0;
 
       window.setTimeout(function () {
         refreshGameOnly();
