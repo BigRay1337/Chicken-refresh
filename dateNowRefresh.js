@@ -1,129 +1,206 @@
-// Independent Date.now controller.
-// Refresh state 1 runs after 1000ms; refresh state 2 runs 100ms later.
+// Refresh only the Java/HTML5 game when Date.now is disabled.
+// Does not reload the entire website.
 (function () {
-  const originalDateNow = Date.now;
-  const originalSetTimeout = window.setTimeout;
-
-  // Full-page refresh behavior imported from Chicken-refresh.
-  // Keep the existing two game-refresh layers as an additional layer.
-  const REFRESH_DELAY_MS = 900;
-  const STATE_2_DELAY_MS = 900;
-
-  let extensionIsEnabled = true;
-  let dateNowValue = originalDateNow();
-  let previusDateNowValue = dateNowValue;
+  let previousEnabled = null;
   let refreshScheduled = false;
-  let previousDateNowChecked = null;
+  let useLongDelay = true;
 
-  Date.now = function () {
-    const originalValue = originalDateNow();
+  function refreshGameOnly() {
+    if (refreshScheduled) return;
 
-    if (!extensionIsEnabled) {
-      dateNowValue = originalValue;
-    }
-
-    previusDateNowValue = originalValue;
-
-    return Math.floor(0 + dateNowValue);
-  };
-
-  function findGame() {
     const applet = document.querySelector(
-      'applet, object[type="application/x-java-applet"], embed[type="application/x-java-applet"], ' +
+      'applet, object[type="application/x-java-applet"], ' +
+      'embed[type="application/x-java-applet"], ' +
       'object[classid*="java" i], embed[src*="java" i]'
     );
 
-    if (applet) return applet;
-
-    return Array.from(document.querySelectorAll("iframe")).find((frame) => {
-      const value = (
-        (frame.src || "") + " " +
-        (frame.id || "") + " " +
-        (typeof frame.className === "string" ? frame.className : "") + " " +
-        (frame.title || "")
-      ).toLowerCase();
-
-      return value.includes("java") ||
-             value.includes("applet") ||
-             value.includes("game");
-    });
-  }
-
-  function oldRefreshLayer() {
-    const game = findGame();
-    if (!game || !game.parentNode) return false;
-
-    game.parentNode.replaceChild(game.cloneNode(true), game);
-    return true;
-  }
-
-  function secondRefreshLayer() {
-    const game = findGame();
-    if (!game || !game.parentNode) return false;
-
-    game.parentNode.replaceChild(game.cloneNode(true), game);
-    return true;
-  }
-
-  function refreshDateNowLayers() {
-    if (refreshScheduled) return;
-
-    refreshScheduled = true;
-
-    dateNowValue = originalDateNow();
-    previusDateNowValue = dateNowValue;
-
-    originalSetTimeout(function () {
-      try {
-        // State 1 refreshes after 1000ms.
-        oldRefreshLayer();
-
-        // State 2 refreshes after another 100ms.
-        originalSetTimeout(function () {
-          try {
-            secondRefreshLayer();
-          } finally {
-            refreshScheduled = false;
-          }
-        }, STATE_2_DELAY_MS);
-      } catch (error) {
+    if (applet && applet.parentNode) {
+      refreshScheduled = true;
+      const replacement = applet.cloneNode(true);
+      applet.parentNode.replaceChild(replacement, applet);
+      window.setTimeout(function () {
         refreshScheduled = false;
-        console.error("Date.now refresh state 1 failed", error);
-      }
-    }, REFRESH_DELAY_MS);
-  }
-
-
-  window.addEventListener("message", function (event) {
-    const data = event && event.data;
-    if (!data) return;
-
-    if (data.command === "setExtensionDateNowState") {
-      extensionIsEnabled = data.enabled === true;
-
-      dateNowValue = originalDateNow();
-      previusDateNowValue = dateNowValue;
-
+      }, 1000);
       return;
     }
 
-    if (data.command === "setSpeedConfig" && data.config) {
-      const checked = data.config.cbDateNowChecked === true;
+    const frame = Array.from(document.querySelectorAll("iframe")).find(function (f) {
+      const value = ((f.src || "") + " " + (f.id || "") + " " +
+        (typeof f.className === "string" ? f.className : "") + " " + (f.title || "")).toLowerCase();
+      return value.includes("java") || value.includes("applet") || value.includes("game");
+    });
 
-      // Only refresh on an actual enabled -> disabled transition.
-      // This prevents the newly reloaded page from immediately reloading again
-      // when it starts with cbDateNowChecked already false.
-      if (previousDateNowChecked === null) {
-        previousDateNowChecked = checked;
-        return;
+    if (frame && frame.parentNode) {
+      refreshScheduled = true;
+      const src = frame.getAttribute("src");
+      if (src) {
+        frame.src = "about:blank";
+        window.setTimeout(function () {
+          frame.src = src;
+        }, 2);
+      } else {
+        frame.parentNode.replaceChild(frame.cloneNode(true), frame);
       }
-
-      if (previousDateNowChecked === true && checked === false) {
-        refreshDateNowLayers();
-
-      }
-
-      previousDateNowChecked = checked;
+      window.setTimeout(function () {
+        refreshScheduled = false;
+      }, 1000);
     }
+  }
+
+  window.addEventListener("message", function (event) {
+    const data = event && event.data;
+    if (!data || data.command !== "setSpeedConfig" || !data.config) return;
+
+    const enabled = data.config.cbDateNowChecked === true;
+
+    if (previousEnabled === null) {
+      previousEnabled = enabled;
+      return;
+    }
+
+    if (enabled === false && previousEnabled === true) {
+      // Refresh in the sequence: 1000 ms, then 0 ms, then repeat.
+      const refreshDelay = useLongDelay ? 0 : 1000;
+      useLongDelay = !useLongDelay;
+
+      window.setTimeout(function () {
+        refreshGameOnly();
+      }, refreshDelay);
+    }
+
+    if (enabled === true) {
+      refreshScheduled = false;
+    }
+
+    previousEnabled = enabled;
   });
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
