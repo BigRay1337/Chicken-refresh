@@ -10,7 +10,16 @@
 
   window.addEventListener("message", function (event) {
     const data = event && event.data;
-    if (!data || data.command !== "setSpeedConfig" || !data.config) return;
+    if (!data) return;
+
+    // A separate refresh command lets the swipe handler disable Date.now
+    // without coupling the refresh itself to the swipe logic.
+    if (data.command === "refreshDateNow") {
+      refreshWebsite();
+      return;
+    }
+
+    if (data.command !== "setSpeedConfig" || !data.config) return;
 
     const enabled = data.config.cbDateNowChecked === true;
 
