@@ -77,7 +77,7 @@ function pageScript() {
     reloadTimers();
   });
 
-  // Downward swipe: temporarily disable Date.now speed mode.
+  // Upward swipe: temporarily disable Date.now speed mode.
   // dateNowRefresh.js detects the false state and refreshes the game page.
   // The normal configuration is restored when the refreshed page requests it again.
   let swipeStartX = null;
@@ -103,11 +103,11 @@ function pageScript() {
     swipeStartX = null;
     swipeStartY = null;
 
-    // Only count a predominantly vertical downward swipe.
-    if (deltaY < SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
+    // Only count a predominantly vertical upward swipe.
+    if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
     if (!speedConfig.cbDateNowChecked) return;
 
-    // Wait 900 ms after the downward swipe before disabling Date.now mode.
+    // Wait 900 ms after the upward swipe before disabling Date.now mode.
     originalSetTimeout(() => {
       if (!speedConfig.cbDateNowChecked) return;
 
