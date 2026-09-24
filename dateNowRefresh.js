@@ -1,4 +1,4 @@
-// Refresh the website when Date.now is disabled.
+// Refresh the website immediately when Date.now is disabled.
 
 (function () {
   let previousEnabled = null;
@@ -9,7 +9,6 @@
 
     refreshScheduled = true;
     window.location.reload();
-    refreshScheduled = false;
   }
 
   window.addEventListener("message", function (event) {
@@ -23,11 +22,9 @@
       return;
     }
 
+    // Refresh immediately on the transition from enabled to disabled.
     if (enabled === false && previousEnabled === true) {
-      // Use browser scheduling rather than a fixed numeric delay.
-      window.setTimeout(function () {
-        refreshWebsite();
-      });
+      refreshWebsite();
     }
 
     if (enabled === true) {
