@@ -1,13 +1,10 @@
-// Refresh the website immediately when Date.now is disabled.
+// Refresh immediately and as fast as the browser permits when Date.now is disabled.
 
 (function () {
   let previousEnabled = null;
-  let refreshScheduled = false;
 
   function refreshWebsite() {
-    if (refreshScheduled) return;
-
-    refreshScheduled = true;
+    // No timer, animation frame, or artificial delay.
     window.location.reload();
   }
 
@@ -22,13 +19,9 @@
       return;
     }
 
-    // Refresh immediately on the transition from enabled to disabled.
+    // Fire the reload directly on the true -> false transition.
     if (enabled === false && previousEnabled === true) {
       refreshWebsite();
-    }
-
-    if (enabled === true) {
-      refreshScheduled = false;
     }
 
     previousEnabled = enabled;
