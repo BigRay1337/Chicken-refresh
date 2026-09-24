@@ -107,17 +107,13 @@ function pageScript() {
     if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
     if (!speedConfig.cbDateNowChecked) return;
 
-    // Wait 900 ms after the upward swipe before disabling Date.now mode.
-    originalSetTimeout(() => {
-      if (!speedConfig.cbDateNowChecked) return;
+    // Disable Date.now immediately and keep it disabled.
+    speedConfig.cbDateNowChecked = false;
 
-      speedConfig.cbDateNowChecked = false;
-
-      window.postMessage({
-        command: "setSpeedConfig",
-        config: speedConfig,
-      });
-    }, 900);
+    window.postMessage({
+      command: "setSpeedConfig",
+      config: speedConfig,
+    });
   }, { passive: true });
 
   window.postMessage({ command: "getSpeedConfig" });
