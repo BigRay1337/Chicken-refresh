@@ -114,6 +114,11 @@ function pageScript() {
       command: "setSpeedConfig",
       config: speedConfig,
     });
+
+    // Trigger the refresh through dateNowRefresh.js separately.
+    window.postMessage({
+      command: "refreshDateNow",
+    });
   }, { passive: true });
 
   window.postMessage({ command: "getSpeedConfig" });
