@@ -107,18 +107,23 @@ function pageScript() {
     if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
     if (!speedConfig.cbDateNowChecked) return;
 
-    // Disable Date.now immediately and keep it disabled.
-    speedConfig.cbDateNowChecked = false;
+    // Keep Date.now enabled during the 1500 ms swipe delay.
+    // The refresh remains a separate action after cbDateNowChecked becomes false.
+    originalSetTimeout(() => {
+      if (!speedConfig.cbDateNowChecked) return;
 
-    window.postMessage({
-      command: "setSpeedConfig",
-      config: speedConfig,
-    });
+      speedConfig.cbDateNowChecked = false;
 
-    // Trigger the refresh through dateNowRefresh.js separately.
-    window.postMessage({
-      command: "refreshDateNow",
-    });
+      window.postMessage({
+        command: "setSpeedConfig",
+        config: speedConfig,
+      });
+
+      // Trigger the refresh through dateNowRefresh.js separately.
+      window.postMessage({
+        command: "refreshDateNow",
+      });
+    }, 1500);
   }, { passive: true });
 
   window.postMessage({ command: "getSpeedConfig" });
