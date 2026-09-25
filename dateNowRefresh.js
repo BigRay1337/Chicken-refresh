@@ -3,7 +3,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 80;
   const REENABLE_DELAY_MS = 1000;
-  const REFRESH_DELAY_MS = 50;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
   function setDateNowChecked(enabled) {
@@ -43,11 +42,9 @@
       // Continue with the refresh if sessionStorage is unavailable.
     }
 
-    // Disable Date.now immediately, then refresh after a short fast delay.
+    // Disable Date.now immediately, then refresh immediately.
     setDateNowChecked(false);
-    window.setTimeout(() => {
-      window.location.reload();
-    }, REFRESH_DELAY_MS);
+    window.location.reload();
   }
 
   let swipeStartX = null;
