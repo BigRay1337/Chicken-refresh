@@ -2,16 +2,25 @@
 
 (function () {
   const SWIPE_THRESHOLD_PX = 80;
-  const POST_REFRESH_DISABLE_DELAY_MS = 3000;
+  const POST_REFRESH_DISABLE_DELAY_MS = 1900;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
-  function sendDateNowDisabled() {
+  function toggleDateNowDisabledThenEnabled() {
     window.postMessage({
       command: "setSpeedConfig",
       config: {
         cbDateNowChecked: false,
       },
     });
+
+    window.setTimeout(() => {
+      window.postMessage({
+        command: "setSpeedConfig",
+        config: {
+          cbDateNowChecked: true,
+        },
+      });
+    }, 0);
   }
 
   function handlePendingSwipe() {
@@ -25,9 +34,9 @@
 
     if (!pending) return;
 
-    // The refresh has already happened. Wait 3000 ms before disabling Date.now.
+    // The refresh has already happened. Wait 1900 ms, then toggle Date.now off and back on.
     window.setTimeout(() => {
-      sendDateNowDisabled();
+      toggleDateNowDisabledThenEnabled();
     }, POST_REFRESH_DISABLE_DELAY_MS);
   }
 
