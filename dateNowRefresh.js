@@ -20,7 +20,7 @@
           cbDateNowChecked: true,
         },
       });
-    }, 0);
+    }, 1000);
   }
 
   function handlePendingSwipe() {
