@@ -1,7 +1,7 @@
 // Swipe up: disable Date.now immediately, refresh immediately, then re-enable it 1000 ms after the refreshed page loads.
 
 (function () {
-  const SWIPE_THRESHOLD_PX = 80;
+  const SWIPE_THRESHOLD_PX = 60;
   const REENABLE_DELAY_MS = 1000;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
