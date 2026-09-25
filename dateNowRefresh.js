@@ -1,4 +1,5 @@
-// Swipe up refreshes first, then disables Date.now 3000 ms after the refreshed page loads.
+// Swipe up is the only trigger: refresh first, wait 1900 ms, disable Date.now,
+// then re-enable it 1000 ms later. There is no watcher for cbDateNowChecked.
 
 (function () {
   const SWIPE_THRESHOLD_PX = 80;
@@ -8,23 +9,20 @@
   function toggleDateNowDisabledThenEnabled() {
     window.postMessage({
       command: "setSpeedConfig",
-      config: {
-        cbDateNowChecked: false,
-      },
+      config: { cbDateNowChecked: false },
     });
 
     window.setTimeout(() => {
       window.postMessage({
         command: "setSpeedConfig",
-        config: {
-          cbDateNowChecked: true,
-        },
+        config: { cbDateNowChecked: true },
       });
     }, 1000);
   }
 
   function handlePendingSwipe() {
     let pending = false;
+
     try {
       pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
       if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
@@ -34,17 +32,15 @@
 
     if (!pending) return;
 
-    // The refresh has already happened. Wait 1900 ms, then toggle Date.now off and back on.
-    window.setTimeout(() => {
-      toggleDateNowDisabledThenEnabled();
-    }, POST_REFRESH_DISABLE_DELAY_MS);
+    // The swipe already caused the refresh. Start the 1900 ms delay after reload.
+    window.setTimeout(toggleDateNowDisabledThenEnabled, POST_REFRESH_DISABLE_DELAY_MS);
   }
 
   function refreshAfterSwipe() {
     try {
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
     } catch (e) {
-      // If sessionStorage is unavailable, the page still refreshes normally.
+      // Continue with the refresh if sessionStorage is unavailable.
     }
 
     window.location.reload();
@@ -72,7 +68,7 @@
     swipeStartX = null;
     swipeStartY = null;
 
-    // Only count a predominantly vertical upward swipe.
+    // Upward swipe only; ignore downward and horizontal swipes.
     if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
 
     refreshAfterSwipe();
