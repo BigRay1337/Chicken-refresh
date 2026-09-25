@@ -1,43 +1,75 @@
-// Volume-Down-held tap trigger for cbDateNowChecked = false.
+// Swipe up: disable Date.now immediately, refresh immediately, then re-enable it 1000 ms after the refreshed page loads.
 
 (function () {
-  let volumeDownHeld = false;
+  const SWIPE_THRESHOLD_PX = 60;
+  const REENABLE_DELAY_MS = 1000;
+  const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
-  function setDateNowCheckedFalse() {
-    if (!volumeDownHeld) return;
-
+  function setDateNowChecked(enabled) {
     window.postMessage({
       command: "setSpeedConfig",
       config: {
-        cbDateNowChecked: false,
+        cbDateNowChecked: enabled,
       },
     });
   }
 
-  // Detect Volume Down when the browser exposes the media-key event.
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "AudioVolumeDown" || event.code === "AudioVolumeDown") {
-      volumeDownHeld = true;
-      event.preventDefault();
+  function handlePendingSwipe() {
+    let pending = false;
+
+    try {
+      pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
+      if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
+    } catch (e) {
+      pending = false;
     }
-  }, true);
 
-  window.addEventListener("keyup", (event) => {
-    if (event.key === "AudioVolumeDown" || event.code === "AudioVolumeDown") {
-      volumeDownHeld = false;
-      event.preventDefault();
+    if (!pending) return;
+
+    setDateNowChecked(false);
+
+    window.setTimeout(() => {
+      setDateNowChecked(true);
+    }, REENABLE_DELAY_MS);
+  }
+
+  function refreshAfterSwipe() {
+    try {
+      sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
+    } catch (e) {
+      // Continue with the refresh if sessionStorage is unavailable.
     }
-  }, true);
 
-  // Only a tap while Volume Down is held triggers false.
-  window.addEventListener("click", () => {
-    if (!volumeDownHeld) return;
-    setDateNowCheckedFalse();
-  }, true);
+    setDateNowChecked(false);
+    window.location.reload();
+  }
 
-  // Also support touchscreen taps.
-  window.addEventListener("touchend", () => {
-    if (!volumeDownHeld) return;
-    setDateNowCheckedFalse();
-  }, true);
+  let swipeStartX = null;
+  let swipeStartY = null;
+
+  window.addEventListener("touchstart", (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
+
+    swipeStartX = event.touches[0].clientX;
+    swipeStartY = event.touches[0].clientY;
+  }, { passive: true });
+
+  window.addEventListener("touchend", (event) => {
+    if (swipeStartX === null || swipeStartY === null) return;
+    if (!event.changedTouches || event.changedTouches.length !== 1) return;
+
+    const endX = event.changedTouches[0].clientX;
+    const endY = event.changedTouches[0].clientY;
+    const deltaX = endX - swipeStartX;
+    const deltaY = endY - swipeStartY;
+
+    swipeStartX = null;
+    swipeStartY = null;
+
+    if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
+
+    refreshAfterSwipe();
+  }, { passive: true });
+
+  handlePendingSwipe();
 })();
