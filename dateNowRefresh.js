@@ -1,38 +1,73 @@
-// Refresh immediately and as fast as the browser permits when Date.now is disabled.
+// Swipe up refreshes first, then disables Date.now 3000 ms after the refreshed page loads.
 
 (function () {
-  let previousEnabled = null;
+  const SWIPE_THRESHOLD_PX = 80;
+  const POST_REFRESH_DISABLE_DELAY_MS = 3000;
+  const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
-  function refreshWebsite() {
-    // No timer, animation frame, or artificial delay.
+  function sendDateNowDisabled() {
+    window.postMessage({
+      command: "setSpeedConfig",
+      config: {
+        cbDateNowChecked: false,
+      },
+    });
+  }
+
+  function handlePendingSwipe() {
+    let pending = false;
+    try {
+      pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
+      if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
+    } catch (e) {
+      pending = false;
+    }
+
+    if (!pending) return;
+
+    // The refresh has already happened. Wait 3000 ms before disabling Date.now.
+    window.setTimeout(() => {
+      sendDateNowDisabled();
+    }, POST_REFRESH_DISABLE_DELAY_MS);
+  }
+
+  function refreshAfterSwipe() {
+    try {
+      sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
+    } catch (e) {
+      // If sessionStorage is unavailable, the page still refreshes normally.
+    }
+
     window.location.reload();
   }
 
-  window.addEventListener("message", function (event) {
-    const data = event && event.data;
-    if (!data) return;
+  let swipeStartX = null;
+  let swipeStartY = null;
 
-    // A separate refresh command lets the swipe handler disable Date.now
-    // without coupling the refresh itself to the swipe logic.
-    if (data.command === "refreshDateNow") {
-      refreshWebsite();
-      return;
-    }
+  window.addEventListener("touchstart", (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
 
-    if (data.command !== "setSpeedConfig" || !data.config) return;
+    swipeStartX = event.touches[0].clientX;
+    swipeStartY = event.touches[0].clientY;
+  }, { passive: true });
 
-    const enabled = data.config.cbDateNowChecked === true;
+  window.addEventListener("touchend", (event) => {
+    if (swipeStartX === null || swipeStartY === null) return;
+    if (!event.changedTouches || event.changedTouches.length !== 1) return;
 
-    if (previousEnabled === null) {
-      previousEnabled = enabled;
-      return;
-    }
+    const endX = event.changedTouches[0].clientX;
+    const endY = event.changedTouches[0].clientY;
+    const deltaX = endX - swipeStartX;
+    const deltaY = endY - swipeStartY;
 
-    // Fire the reload directly on the true -> false transition.
-    if (enabled === false && previousEnabled === true) {
-      refreshWebsite();
-    }
+    swipeStartX = null;
+    swipeStartY = null;
 
-    previousEnabled = enabled;
-  });
+    // Only count a predominantly vertical upward swipe.
+    if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
+
+    refreshAfterSwipe();
+  }, { passive: true });
+
+  handlePendingSwipe();
 })();
