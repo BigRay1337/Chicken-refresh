@@ -1,30 +1,22 @@
-// Swipe up refreshes first, then disables Date.now 3000 ms after the refreshed page loads.
+// Swipe up refreshes the page first. After the refreshed page loads,
+// Date.now is disabled immediately, then re-enabled after 1000 ms.
 
 (function () {
   const SWIPE_THRESHOLD_PX = 80;
-  const POST_REFRESH_DISABLE_DELAY_MS = 1900;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
-  function toggleDateNowDisabledThenEnabled() {
+  function setDateNowChecked(enabled) {
     window.postMessage({
       command: "setSpeedConfig",
       config: {
-        cbDateNowChecked: false,
+        cbDateNowChecked: enabled,
       },
     });
-
-    window.setTimeout(() => {
-      window.postMessage({
-        command: "setSpeedConfig",
-        config: {
-          cbDateNowChecked: true,
-        },
-      });
-    }, 1000);
   }
 
   function handlePendingSwipe() {
     let pending = false;
+
     try {
       pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
       if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
@@ -34,19 +26,23 @@
 
     if (!pending) return;
 
-    // The refresh has already happened. Wait 1900 ms, then toggle Date.now off and back on.
+    // The refresh completed. Disable Date.now immediately on the new page.
+    setDateNowChecked(false);
+
+    // Re-enable Date.now exactly 1000 ms later.
     window.setTimeout(() => {
-      toggleDateNowDisabledThenEnabled();
-    }, POST_REFRESH_DISABLE_DELAY_MS);
+      setDateNowChecked(true);
+    }, 1000);
   }
 
   function refreshAfterSwipe() {
     try {
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
     } catch (e) {
-      // If sessionStorage is unavailable, the page still refreshes normally.
+      // The refresh still proceeds if sessionStorage is unavailable.
     }
 
+    // Refresh first. The false/true toggle happens after the refreshed page loads.
     window.location.reload();
   }
 
@@ -72,7 +68,7 @@
     swipeStartX = null;
     swipeStartY = null;
 
-    // Only count a predominantly vertical upward swipe.
+    // Only trigger on a predominantly upward swipe.
     if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
 
     refreshAfterSwipe();
