@@ -1,28 +1,30 @@
-// Swipe up: refresh immediately, then after the refreshed page loads wait 1900 ms,
-// set cbDateNowChecked to false, and set it back to true 1000 ms later.
-// There is no watcher that reacts to cbDateNowChecked becoming false.
+// Swipe up refreshes first, then disables Date.now 3000 ms after the refreshed page loads.
 
 (function () {
   const SWIPE_THRESHOLD_PX = 80;
-  const POST_REFRESH_DELAY_MS = 1900;
-  const REENABLE_DELAY_MS = 1000;
+  const POST_REFRESH_DISABLE_DELAY_MS = 1900;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
-  let swipeStartX = null;
-  let swipeStartY = null;
-
-  function setDateNowChecked(value) {
+  function toggleDateNowDisabledThenEnabled() {
     window.postMessage({
       command: "setSpeedConfig",
       config: {
-        cbDateNowChecked: value,
+        cbDateNowChecked: false,
       },
     });
+
+    window.setTimeout(() => {
+      window.postMessage({
+        command: "setSpeedConfig",
+        config: {
+          cbDateNowChecked: true,
+        },
+      });
+    }, 1000);
   }
 
-  function runAfterRefresh() {
+  function handlePendingSwipe() {
     let pending = false;
-
     try {
       pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
       if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
@@ -32,27 +34,24 @@
 
     if (!pending) return;
 
-    // Refresh already happened. Wait 1900 ms before disabling Date.now spoofing.
+    // The refresh has already happened. Wait 1900 ms, then toggle Date.now off and back on.
     window.setTimeout(() => {
-      setDateNowChecked(false);
-
-      // Re-enable it 1000 ms after disabling it.
-      window.setTimeout(() => {
-        setDateNowChecked(true);
-      }, REENABLE_DELAY_MS);
-    }, POST_REFRESH_DELAY_MS);
+      toggleDateNowDisabledThenEnabled();
+    }, POST_REFRESH_DISABLE_DELAY_MS);
   }
 
-  function refreshFromSwipeUp() {
+  function refreshAfterSwipe() {
     try {
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
     } catch (e) {
-      // Continue with the refresh even if sessionStorage is unavailable.
+      // If sessionStorage is unavailable, the page still refreshes normally.
     }
 
-    // Refresh immediately. The false/true sequence is handled after reload.
     window.location.reload();
   }
+
+  let swipeStartX = null;
+  let swipeStartY = null;
 
   window.addEventListener("touchstart", (event) => {
     if (!event.touches || event.touches.length !== 1) return;
@@ -73,15 +72,11 @@
     swipeStartX = null;
     swipeStartY = null;
 
-    // Only a predominantly upward swipe triggers the refresh.
-    if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) >= Math.abs(deltaY)) {
-      return;
-    }
+    // Only count a predominantly vertical upward swipe.
+    if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
 
-    refreshFromSwipeUp();
+    refreshAfterSwipe();
   }, { passive: true });
 
-  // On a normal load this does nothing. After a swipe-triggered reload,
-  // it runs the 1900 ms -> false -> 1000 ms -> true sequence.
-  runAfterRefresh();
+  handlePendingSwipe();
 })();
