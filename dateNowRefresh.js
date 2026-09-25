@@ -4,6 +4,7 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 80;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
+  const DATE_NOW_REFRESH_DELAY_MS = 500;
 
   function setDateNowChecked(enabled) {
     window.postMessage({
@@ -26,13 +27,15 @@
 
     if (!pending) return;
 
-    // The refresh completed. Disable Date.now immediately on the new page.
-    setDateNowChecked(false);
-
-    // Re-enable Date.now exactly 1000 ms later.
+    // After the refreshed page loads, disable Date.now after 500 ms.
     window.setTimeout(() => {
-      setDateNowChecked(true);
-    }, 1000);
+      setDateNowChecked(false);
+
+      // Re-enable Date.now 1000 ms after disabling it.
+      window.setTimeout(() => {
+        setDateNowChecked(true);
+      }, 1000);
+    }, DATE_NOW_REFRESH_DELAY_MS);
   }
 
   function refreshAfterSwipe() {
