@@ -1,11 +1,13 @@
-// Swipe up: disable Date.now immediately, refresh immediately, then re-enable it 1000 ms after the refreshed page loads.
-
 (function () {
   const SWIPE_THRESHOLD_PX = 60;
   const REENABLE_DELAY_MS = 1000;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
+  let cbDateNowChecked = true;
+
   function setDateNowChecked(enabled) {
+    cbDateNowChecked = enabled;
+
     window.postMessage({
       command: "setSpeedConfig",
       config: {
@@ -33,16 +35,33 @@
     }, REENABLE_DELAY_MS);
   }
 
+  function refreshNow() {
+    window.location.reload();
+  }
+
   function refreshAfterSwipe() {
     try {
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
-    } catch (e) {
-      // Continue with the refresh if sessionStorage is unavailable.
-    }
+    } catch (e) {}
 
     setDateNowChecked(false);
-    window.location.reload();
+    refreshNow();
   }
+
+  window.addEventListener("message", (event) => {
+    if (!event.data) return;
+
+    if (event.data.command === "setSpeedConfig" &&
+        typeof event.data.config?.cbDateNowChecked === "boolean") {
+      cbDateNowChecked = event.data.config.cbDateNowChecked;
+      return;
+    }
+
+    if (event.data.command === "dateNowRefreshFromTap" &&
+        cbDateNowChecked === false) {
+      refreshNow();
+    }
+  });
 
   let swipeStartX = null;
   let swipeStartY = null;
@@ -66,10 +85,12 @@
     swipeStartX = null;
     swipeStartY = null;
 
-    if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
+    if (deltaY > -SWIPE_THRESHOLD_PX ||
+        Math.abs(deltaX) > Math.abs(deltaY)) return;
 
     refreshAfterSwipe();
   }, { passive: true });
 
+  window.postMessage({ command: "getSpeedConfig" });
   handlePendingSwipe();
 })();
