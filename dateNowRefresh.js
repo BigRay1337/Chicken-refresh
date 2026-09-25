@@ -1,8 +1,8 @@
-// Swipe up refreshes first, then disables Date.now 900 ms after the refreshed page loads.
+// Swipe up refreshes first, then disables Date.now 3000 ms after the refreshed page loads.
 
 (function () {
   const SWIPE_THRESHOLD_PX = 80;
-  const POST_REFRESH_DISABLE_DELAY_MS = 900;
+  const POST_REFRESH_DISABLE_DELAY_MS = 1900;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
   function toggleDateNowDisabledThenEnabled() {
@@ -34,7 +34,7 @@
 
     if (!pending) return;
 
-    // The refresh has already happened. Wait 900 ms, then toggle Date.now off and back on.
+    // The refresh has already happened. Wait 1900 ms, then toggle Date.now off and back on.
     window.setTimeout(() => {
       toggleDateNowDisabledThenEnabled();
     }, POST_REFRESH_DISABLE_DELAY_MS);
