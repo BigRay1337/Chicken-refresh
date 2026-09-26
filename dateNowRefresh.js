@@ -44,9 +44,8 @@
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
     } catch (e) {}
 
-    setDateNowChecked(false);
-
     setTimeout(() => {
+      setDateNowChecked(false);
       setDateNowChecked(true);
     }, REENABLE_DELAY_MS);
 
