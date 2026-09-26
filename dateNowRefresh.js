@@ -22,10 +22,10 @@
       reenableTimer = null;
     }
 
-    setDateNowChecked(false);
-
     reenableTimer = setTimeout(() => {
       reenableTimer = null;
+
+      setDateNowChecked(false);
       setDateNowChecked(true);
     }, REENABLE_DELAY_MS);
   }
