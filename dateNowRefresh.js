@@ -1,9 +1,9 @@
 (function () {
-  const REENABLE_DELAY_MS = 275;
+  const DISABLE_DELAY_MS = 275;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
-  let reenableTimer = null;
+  let disableTimer = null;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -17,20 +17,19 @@
   }
 
   function handleSwipeUp() {
-    if (reenableTimer !== null) {
-      clearTimeout(reenableTimer);
-      reenableTimer = null;
+    if (disableTimer !== null) {
+      clearTimeout(disableTimer);
+      disableTimer = null;
     }
 
-    // Keep Date.now disabled until the 275 ms delay expires.
-    setDateNowChecked(false);
+    // Enable the scripts immediately when the upward swipe is detected.
+    setDateNowChecked(true);
 
-    reenableTimer = setTimeout(() => {
-      reenableTimer = null;
-
-      // Re-enable immediately after the delay.
-      setDateNowChecked(true);
-    }, REENABLE_DELAY_MS);
+    // Disable them 275 ms later.
+    disableTimer = setTimeout(() => {
+      disableTimer = null;
+      setDateNowChecked(false);
+    }, DISABLE_DELAY_MS);
   }
 
   window.addEventListener("message", (event) => {
