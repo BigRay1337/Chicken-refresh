@@ -16,34 +16,10 @@
     });
   }
 
-  function handlePendingSwipe() {
-    let pending = false;
-
-    try {
-      pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
-      if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
-    } catch (e) {
-      pending = false;
-    }
-
-    if (!pending) return;
-
-    setDateNowChecked(false);
-
-    setDateNowChecked(true);
-  }
-
-  function refreshNow() {
-    window.location.reload();
-  }
-
   function refreshAfterSwipe() {
-    try {
-      sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
-    } catch (e) {}
-
-    setDateNowChecked(false);
-    refreshNow();
+    window.setTimeout(() => {
+      setDateNowChecked(false);
+    }, FALSE_DELAY_MS);
   }
 
   window.addEventListener("message", (event) => {
@@ -90,5 +66,4 @@
   }, { passive: true });
 
   window.postMessage({ command: "getSpeedConfig" });
-  handlePendingSwipe();
 })();
