@@ -1,6 +1,5 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 60;
-  const REENABLE_DELAY_MS = 0;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
   let cbDateNowChecked = true;
@@ -30,9 +29,7 @@
 
     setDateNowChecked(false);
 
-    window.setTimeout(() => {
-      setDateNowChecked(true);
-    }, REENABLE_DELAY_MS);
+    setDateNowChecked(true);
   }
 
   function refreshNow() {
