@@ -1,4 +1,5 @@
 (function () {
+  const REENABLE_DELAY_MS = 1000;
   const SWIPE_THRESHOLD_PX = 60;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
