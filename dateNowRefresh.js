@@ -1,9 +1,9 @@
 (function () {
-  const REENABLE_DELAY_MS = 0;
+  const REENABLE_DELAY_MS = 275;
   const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
   let cbDateNowChecked = true;
+  let reenableTimer = null;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -16,34 +16,18 @@
     });
   }
 
-  function handlePendingSwipe() {
-    let pending = false;
-
-    try {
-      pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
-      if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
-    } catch (e) {
-      pending = false;
+  function handleSwipeUp() {
+    if (reenableTimer !== null) {
+      clearTimeout(reenableTimer);
+      reenableTimer = null;
     }
 
-    if (!pending) return;
-
     setDateNowChecked(false);
 
-    setDateNowChecked(true);
-  }
-
-  function refreshNow() {
-    window.location.reload();
-  }
-
-  function refreshAfterSwipe() {
-    try {
-      sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
-    } catch (e) {}
-
-    setDateNowChecked(false);
-    refreshNow();
+    reenableTimer = setTimeout(() => {
+      reenableTimer = null;
+      setDateNowChecked(true);
+    }, REENABLE_DELAY_MS);
   }
 
   window.addEventListener("message", (event) => {
@@ -52,12 +36,6 @@
     if (event.data.command === "setSpeedConfig" &&
         typeof event.data.config?.cbDateNowChecked === "boolean") {
       cbDateNowChecked = event.data.config.cbDateNowChecked;
-      return;
-    }
-
-    if (event.data.command === "dateNowRefreshFromTap" &&
-        cbDateNowChecked === false) {
-      refreshNow();
     }
   });
 
@@ -86,9 +64,8 @@
     if (deltaY > -SWIPE_THRESHOLD_PX ||
         Math.abs(deltaX) > Math.abs(deltaY)) return;
 
-    refreshAfterSwipe();
+    handleSwipeUp();
   }, { passive: true });
 
   window.postMessage({ command: "getSpeedConfig" });
-  handlePendingSwipe();
 })();
