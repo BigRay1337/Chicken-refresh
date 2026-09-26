@@ -1,5 +1,5 @@
 (function () {
-  const REENABLE_DELAY_MS = 0;
+  const FALSE_DELAY_MS = 276;
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
@@ -28,9 +28,9 @@
 
     if (!pending) return;
 
-    setDateNowChecked(false);
-
-    setDateNowChecked(true);
+    setTimeout(() => {
+      setDateNowChecked(false);
+    }, FALSE_DELAY_MS);
   }
 
   function refreshNow() {
@@ -42,7 +42,9 @@
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
     } catch (e) {}
 
-    setDateNowChecked(false);
+    setTimeout(() => {
+      setDateNowChecked(false);
+    }, FALSE_DELAY_MS);
     refreshNow();
   }
 
