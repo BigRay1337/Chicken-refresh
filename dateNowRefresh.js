@@ -22,10 +22,13 @@
       reenableTimer = null;
     }
 
+    // Keep Date.now disabled until the 275 ms delay expires.
+    setDateNowChecked(false);
+
     reenableTimer = setTimeout(() => {
       reenableTimer = null;
 
-      setDateNowChecked(false);
+      // Re-enable immediately after the delay.
       setDateNowChecked(true);
     }, REENABLE_DELAY_MS);
   }
@@ -33,8 +36,10 @@
   window.addEventListener("message", (event) => {
     if (!event.data) return;
 
-    if (event.data.command === "setSpeedConfig" &&
-        typeof event.data.config?.cbDateNowChecked === "boolean") {
+    if (
+      event.data.command === "setSpeedConfig" &&
+      typeof event.data.config?.cbDateNowChecked === "boolean"
+    ) {
       cbDateNowChecked = event.data.config.cbDateNowChecked;
     }
   });
@@ -61,8 +66,13 @@
     swipeStartX = null;
     swipeStartY = null;
 
-    if (deltaY > -SWIPE_THRESHOLD_PX ||
-        Math.abs(deltaX) > Math.abs(deltaY)) return;
+    // Require a predominantly upward swipe of at least 30 px.
+    if (
+      deltaY > -SWIPE_THRESHOLD_PX ||
+      Math.abs(deltaX) > Math.abs(deltaY)
+    ) {
+      return;
+    }
 
     handleSwipeUp();
   }, { passive: true });
