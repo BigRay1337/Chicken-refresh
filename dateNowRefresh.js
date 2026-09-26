@@ -1,6 +1,7 @@
 (function () {
+  const SWIPE_THRESHOLD_PX = 60;
   const REENABLE_DELAY_MS = 1000;
-  const TAP_PENDING_KEY = "chickenDateNowTapRefreshPending";
+  const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
   let cbDateNowChecked = true;
 
@@ -15,12 +16,12 @@
     });
   }
 
-  function handlePendingTap() {
+  function handlePendingSwipe() {
     let pending = false;
 
     try {
-      pending = sessionStorage.getItem(TAP_PENDING_KEY) === "true";
-      if (pending) sessionStorage.removeItem(TAP_PENDING_KEY);
+      pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
+      if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
     } catch (e) {
       pending = false;
     }
@@ -34,13 +35,17 @@
     }, REENABLE_DELAY_MS);
   }
 
-  function refreshAfterTap() {
+  function refreshNow() {
+    window.location.reload();
+  }
+
+  function refreshAfterSwipe() {
     try {
-      sessionStorage.setItem(TAP_PENDING_KEY, "true");
+      sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
     } catch (e) {}
 
     setDateNowChecked(false);
-    window.location.reload();
+    refreshNow();
   }
 
   window.addEventListener("message", (event) => {
@@ -54,10 +59,38 @@
 
     if (event.data.command === "dateNowRefreshFromTap" &&
         cbDateNowChecked === false) {
-      refreshAfterTap();
+      refreshNow();
     }
   });
 
+  let swipeStartX = null;
+  let swipeStartY = null;
+
+  window.addEventListener("touchstart", (event) => {
+    if (!event.touches || event.touches.length !== 1) return;
+
+    swipeStartX = event.touches[0].clientX;
+    swipeStartY = event.touches[0].clientY;
+  }, { passive: true });
+
+  window.addEventListener("touchend", (event) => {
+    if (swipeStartX === null || swipeStartY === null) return;
+    if (!event.changedTouches || event.changedTouches.length !== 1) return;
+
+    const endX = event.changedTouches[0].clientX;
+    const endY = event.changedTouches[0].clientY;
+    const deltaX = endX - swipeStartX;
+    const deltaY = endY - swipeStartY;
+
+    swipeStartX = null;
+    swipeStartY = null;
+
+    if (deltaY > -SWIPE_THRESHOLD_PX ||
+        Math.abs(deltaX) > Math.abs(deltaY)) return;
+
+    refreshAfterSwipe();
+  }, { passive: true });
+
   window.postMessage({ command: "getSpeedConfig" });
-  handlePendingTap();
+  handlePendingSwipe();
 })();
