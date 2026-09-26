@@ -26,15 +26,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ ok: true });
   } else if (request.command === "getSpeedConfig") {
     sendResponse(speedConfig);
-  } else if (request.command === "tapRefreshIfDateNowDisabled") {
-    if (speedConfig.cbDateNowChecked === false) {
-      window.postMessage({
-        command: "dateNowRefreshFromTap",
-      });
-      sendResponse({ ok: true, triggered: true });
-    } else {
-      sendResponse({ ok: true, triggered: false });
-    }
   }
 
   return true;

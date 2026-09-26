@@ -1,24 +1,30 @@
+// Swipe up refreshes first, then disables Date.now 3000 ms after the refreshed page loads.
+
 (function () {
-  const REENABLE_DELAY_MS = 275;
-  const SWIPE_THRESHOLD_PX = 30;
+  const SWIPE_THRESHOLD_PX = 80;
+  const POST_REFRESH_DISABLE_DELAY_MS = 1;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
-  let cbDateNowChecked = true;
-
-  function setDateNowChecked(enabled) {
-    cbDateNowChecked = enabled;
-
+  function toggleDateNowDisabledThenEnabled() {
     window.postMessage({
       command: "setSpeedConfig",
       config: {
-        cbDateNowChecked: enabled,
+        cbDateNowChecked: false,
       },
     });
+
+    window.setTimeout(() => {
+      window.postMessage({
+        command: "setSpeedConfig",
+        config: {
+          cbDateNowChecked: true,
+        },
+      });
+    }, 1000);
   }
 
   function handlePendingSwipe() {
     let pending = false;
-
     try {
       pending = sessionStorage.getItem(SWIPE_PENDING_KEY) === "true";
       if (pending) sessionStorage.removeItem(SWIPE_PENDING_KEY);
@@ -28,44 +34,21 @@
 
     if (!pending) return;
 
-    setDateNowChecked(false);
-
-    setTimeout(() => {
-      setDateNowChecked(true);
-    }, REENABLE_DELAY_MS);
-  }
-
-  function refreshNow() {
-    window.location.reload();
+    // The refresh has already happened. Wait 1900 ms, then toggle Date.now off and back on.
+    window.setTimeout(() => {
+      toggleDateNowDisabledThenEnabled();
+    }, POST_REFRESH_DISABLE_DELAY_MS);
   }
 
   function refreshAfterSwipe() {
     try {
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
-    } catch (e) {}
+    } catch (e) {
+      // If sessionStorage is unavailable, the page still refreshes normally.
+    }
 
-    setTimeout(() => {
-      setDateNowChecked(false);
-      setDateNowChecked(true);
-    }, REENABLE_DELAY_MS);
-
-    refreshNow();
+    window.location.reload();
   }
-
-  window.addEventListener("message", (event) => {
-    if (!event.data) return;
-
-    if (event.data.command === "setSpeedConfig" &&
-        typeof event.data.config?.cbDateNowChecked === "boolean") {
-      cbDateNowChecked = event.data.config.cbDateNowChecked;
-      return;
-    }
-
-    if (event.data.command === "dateNowRefreshFromTap" &&
-        cbDateNowChecked === false) {
-      refreshNow();
-    }
-  });
 
   let swipeStartX = null;
   let swipeStartY = null;
@@ -89,12 +72,12 @@
     swipeStartX = null;
     swipeStartY = null;
 
-    if (deltaY > -SWIPE_THRESHOLD_PX ||
-        Math.abs(deltaX) > Math.abs(deltaY)) return;
+    // Only count a predominantly vertical upward swipe.
+    if (deltaY > -SWIPE_THRESHOLD_PX || Math.abs(deltaX) > Math.abs(deltaY)) return;
 
     refreshAfterSwipe();
   }, { passive: true });
 
-  window.postMessage({ command: "getSpeedConfig" });
   handlePendingSwipe();
 })();
+);
