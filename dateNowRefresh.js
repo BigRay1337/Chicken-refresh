@@ -1,6 +1,6 @@
 (function () {
   const REENABLE_DELAY_MS = 0;
-  const SWIPE_THRESHOLD_PX = 60;
+  const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
   let cbDateNowChecked = true;
