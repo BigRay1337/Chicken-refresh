@@ -24,6 +24,16 @@
 
     if (pending) {
       setDateNowDisabled();
+
+      // Re-enable immediately after the refreshed page loads.
+      window.setTimeout(() => {
+        window.postMessage({
+          command: "setSpeedConfig",
+          config: {
+            cbDateNowChecked: true,
+          },
+        });
+      }, 0);
     }
   }
 
@@ -32,7 +42,7 @@
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
     } catch (e) {}
 
-    // Keep cbDateNowChecked false for 275 ms, then refresh while it is still false.
+    // Disable immediately, keep it false for the full delay, then refresh.
     setDateNowDisabled();
 
     window.setTimeout(() => {
