@@ -1,13 +1,17 @@
 (function () {
+  const REENABLE_DELAY_MS = 0;
   const SWIPE_THRESHOLD_PX = 30;
-  const FALSE_DELAY_MS = 275;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
-  function setDateNowDisabled() {
+  let cbDateNowChecked = true;
+
+  function setDateNowChecked(enabled) {
+    cbDateNowChecked = enabled;
+
     window.postMessage({
       command: "setSpeedConfig",
       config: {
-        cbDateNowChecked: false,
+        cbDateNowChecked: enabled,
       },
     });
   }
@@ -22,19 +26,15 @@
       pending = false;
     }
 
-    if (pending) {
-      setDateNowDisabled();
+    if (!pending) return;
 
-      // Re-enable immediately after the refreshed page loads.
-      window.setTimeout(() => {
-        window.postMessage({
-          command: "setSpeedConfig",
-          config: {
-            cbDateNowChecked: true,
-          },
-        });
-      }, 0);
-    }
+    setDateNowChecked(false);
+
+    setDateNowChecked(true);
+  }
+
+  function refreshNow() {
+    window.location.reload();
   }
 
   function refreshAfterSwipe() {
@@ -42,14 +42,24 @@
       sessionStorage.setItem(SWIPE_PENDING_KEY, "true");
     } catch (e) {}
 
-    // Disable immediately, keep it false for the full delay, then refresh.
-    setDateNowDisabled();
-
-    window.setTimeout(() => {
-      setDateNowDisabled();
-      window.location.reload();
-    }, FALSE_DELAY_MS);
+    setDateNowChecked(false);
+    refreshNow();
   }
+
+  window.addEventListener("message", (event) => {
+    if (!event.data) return;
+
+    if (event.data.command === "setSpeedConfig" &&
+        typeof event.data.config?.cbDateNowChecked === "boolean") {
+      cbDateNowChecked = event.data.config.cbDateNowChecked;
+      return;
+    }
+
+    if (event.data.command === "dateNowRefreshFromTap" &&
+        cbDateNowChecked === false) {
+      refreshNow();
+    }
+  });
 
   let swipeStartX = null;
   let swipeStartY = null;
@@ -73,13 +83,12 @@
     swipeStartX = null;
     swipeStartY = null;
 
-    if (
-      deltaY > -SWIPE_THRESHOLD_PX ||
-      Math.abs(deltaX) > Math.abs(deltaY)
-    ) return;
+    if (deltaY > -SWIPE_THRESHOLD_PX ||
+        Math.abs(deltaX) > Math.abs(deltaY)) return;
 
     refreshAfterSwipe();
   }, { passive: true });
 
+  window.postMessage({ command: "getSpeedConfig" });
   handlePendingSwipe();
 })();
