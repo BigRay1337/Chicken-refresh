@@ -1,5 +1,5 @@
 (function () {
-  const REENABLE_DELAY_MS = 0;
+  const REENABLE_DELAY_MS = 275;
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_PENDING_KEY = "chickenDateNowSwipeRefreshPending";
 
@@ -30,7 +30,10 @@
 
     setDateNowChecked(false);
 
-    setDateNowChecked(true);
+    setTimeout(() => {
+      setDateNowChecked(true);
+      refreshNow();
+    }, REENABLE_DELAY_MS);
   }
 
   function refreshNow() {
@@ -43,7 +46,11 @@
     } catch (e) {}
 
     setDateNowChecked(false);
-    refreshNow();
+
+    setTimeout(() => {
+      setDateNowChecked(true);
+      refreshNow();
+    }, REENABLE_DELAY_MS);
   }
 
   window.addEventListener("message", (event) => {
