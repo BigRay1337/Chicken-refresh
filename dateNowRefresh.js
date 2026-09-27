@@ -1,38 +1,38 @@
 (function () {
-  const DISABLE_DELAY_MS = 237.9;
-  const FALSE_DURATION_MS = 9000;
+  const DISABLE_DELAY_MS = 238;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
   let disableTimer = null;
-  let falseTimer = null;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
+
     window.postMessage({
       command: "setSpeedConfig",
-      config: { cbDateNowChecked: enabled },
+      config: {
+        cbDateNowChecked: enabled,
+      },
     });
   }
 
   function handleSwipeUp() {
-    if (disableTimer !== null) clearTimeout(disableTimer);
-    if (falseTimer !== null) clearTimeout(falseTimer);
+    if (disableTimer !== null) {
+      clearTimeout(disableTimer);
+      disableTimer = null;
+    }
 
     setDateNowChecked(true);
 
     disableTimer = setTimeout(() => {
       disableTimer = null;
       setDateNowChecked(false);
-
-      falseTimer = setTimeout(function keepDisabled() {
-        falseTimer = setTimeout(keepDisabled, FALSE_DURATION_MS);
-      }, FALSE_DURATION_MS);
     }, DISABLE_DELAY_MS);
   }
 
   window.addEventListener("message", (event) => {
     if (!event.data) return;
+
     if (
       event.data.command === "setSpeedConfig" &&
       typeof event.data.config?.cbDateNowChecked === "boolean"
@@ -46,6 +46,7 @@
 
   window.addEventListener("touchstart", (event) => {
     if (!event.touches || event.touches.length !== 1) return;
+
     swipeStartX = event.touches[0].clientX;
     swipeStartY = event.touches[0].clientY;
   }, { passive: true });
@@ -65,7 +66,9 @@
     if (
       deltaY > -SWIPE_THRESHOLD_PX ||
       Math.abs(deltaX) > Math.abs(deltaY)
-    ) return;
+    ) {
+      return;
+    }
 
     handleSwipeUp();
   }, { passive: true });
@@ -77,6 +80,7 @@
 
   window.addEventListener("touchstart", (event) => {
     if (!event.touches || event.touches.length !== 1) return;
+
     refreshStartX = event.touches[0].clientX;
     refreshStartY = event.touches[0].clientY;
   }, { passive: true });
@@ -96,7 +100,9 @@
     if (
       deltaY > -SWIPE_THRESHOLD_PX ||
       Math.abs(deltaX) > Math.abs(deltaY)
-    ) return;
+    ) {
+      return;
+    }
 
     window.location.reload();
   }, { passive: true });
