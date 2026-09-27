@@ -25,7 +25,7 @@
     // Enable the scripts immediately when the upward swipe is detected.
     setDateNowChecked(true);
 
-    // Disable them 207 ms later.
+    // Disable them 213 ms later.
     disableTimer = setTimeout(() => {
       disableTimer = null;
       setDateNowChecked(false);
