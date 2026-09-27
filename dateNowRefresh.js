@@ -22,11 +22,11 @@
       disableTimer = null;
     }
 
-    setDateNowChecked(true);
+    setDateNowChecked(false);
 
     disableTimer = setTimeout(() => {
       disableTimer = null;
-      setDateNowChecked(false);
+      setDateNowChecked(true);
     }, DISABLE_DELAY_MS);
   }
 
