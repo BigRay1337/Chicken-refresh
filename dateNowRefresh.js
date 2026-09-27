@@ -1,5 +1,5 @@
 (function () {
-  const DISABLE_DELAY_MS = 275;
+  const DISABLE_DELAY_MS = 207;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
@@ -25,7 +25,7 @@
     // Enable the scripts immediately when the upward swipe is detected.
     setDateNowChecked(true);
 
-    // Disable them 275 ms later.
+    // Disable them 207 ms later.
     disableTimer = setTimeout(() => {
       disableTimer = null;
       setDateNowChecked(false);
