@@ -1,5 +1,5 @@
 (function () {
-  const DISABLE_DELAY_MS = 237.99999999999;
+  const DISABLE_DELAY_MS = 238; // 237.999... ms (237.9 with infinitely repeating 9s) = 238 ms
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
