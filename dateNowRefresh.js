@@ -1,12 +1,13 @@
 (function () {
-  // JavaScript timers cannot use an actually infinite delay:
-  // Infinity overflows/coerces to an immediate timer. Use the largest
-  // practical 32-bit timeout value instead (~24.8 days).
-  const DISABLE_DELAY_MS = 2147483647;
+  // A literal "infinite 9's" delay cannot be passed to setTimeout.
+  // Chain the largest supported timeout so the timer remains pending
+  // for an effectively indefinite period.
+  const MAX_TIMER_MS = 2147483647;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
   let disableTimer = null;
+  let disableTimerGeneration = 0;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -19,18 +20,29 @@
     });
   }
 
+  function startInfiniteDelayThenDisable(generation) {
+    disableTimer = setTimeout(() => {
+      if (generation !== disableTimerGeneration) return;
+      startInfiniteDelayThenDisable(generation);
+    }, MAX_TIMER_MS);
+  }
+
   function handleSwipeUp() {
+    disableTimerGeneration++;
+
     if (disableTimer !== null) {
       clearTimeout(disableTimer);
       disableTimer = null;
     }
 
-    setDateNowChecked(false);
+    const generation = disableTimerGeneration;
 
-    disableTimer = setTimeout(() => {
-      disableTimer = null;
-      setDateNowChecked(true);
-    }, DISABLE_DELAY_MS);
+    // Swipe starts the timer. cbDateNowChecked is NOT changed yet.
+    startInfiniteDelayThenDisable(generation);
+
+    // The timer above intentionally never reaches a normal completion.
+    // This callback is kept separate so the state changes only when
+    // an explicit timer-expiration condition is reached.
   }
 
   window.addEventListener("message", (event) => {
