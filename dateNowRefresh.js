@@ -1,5 +1,5 @@
 (function () {
-  const DISABLE_DELAY_MS = 1000;
+  const DISABLE_DELAY_MS = 250;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
@@ -22,7 +22,8 @@
       disableTimer = null;
     }
 
-    // Start the 1000 ms timer when the upward swipe occurs.
+    // Start the 250 ms timer when the upward swipe occurs.
+    // After the timer expires, set cbDateNowChecked to false.
     disableTimer = setTimeout(() => {
       disableTimer = null;
       setDateNowChecked(false);
