@@ -1,13 +1,9 @@
 (function () {
-  // A literal "infinite 9's" delay cannot be passed to setTimeout.
-  // Chain the largest supported timeout so the timer remains pending
-  // for an effectively indefinite period.
-  const MAX_TIMER_MS = 2147483647;
+  const DISABLE_DELAY_MS = 1000;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
   let disableTimer = null;
-  let disableTimerGeneration = 0;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -20,29 +16,17 @@
     });
   }
 
-  function startInfiniteDelayThenDisable(generation) {
-    disableTimer = setTimeout(() => {
-      if (generation !== disableTimerGeneration) return;
-      startInfiniteDelayThenDisable(generation);
-    }, MAX_TIMER_MS);
-  }
-
   function handleSwipeUp() {
-    disableTimerGeneration++;
-
     if (disableTimer !== null) {
       clearTimeout(disableTimer);
       disableTimer = null;
     }
 
-    const generation = disableTimerGeneration;
-
-    // Swipe starts the timer. cbDateNowChecked is NOT changed yet.
-    startInfiniteDelayThenDisable(generation);
-
-    // The timer above intentionally never reaches a normal completion.
-    // This callback is kept separate so the state changes only when
-    // an explicit timer-expiration condition is reached.
+    // Start the 1000 ms timer when the upward swipe occurs.
+    disableTimer = setTimeout(() => {
+      disableTimer = null;
+      setDateNowChecked(false);
+    }, DISABLE_DELAY_MS);
   }
 
   window.addEventListener("message", (event) => {
