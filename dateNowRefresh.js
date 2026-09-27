@@ -1,5 +1,5 @@
 (function () {
-  const DISABLE_DELAY_MS = 238; // 237.999... ms (237.9 with infinitely repeating 9s) = 238 ms
+  const DISABLE_DELAY_MS = 237.99999999999997; // 237.999... ms, intentionally below 238
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
@@ -22,10 +22,8 @@
       disableTimer = null;
     }
 
-    // Enable the scripts immediately when the upward swipe is detected.
     setDateNowChecked(true);
 
-    // Disable them after the requested delay.
     disableTimer = setTimeout(() => {
       disableTimer = null;
       setDateNowChecked(false);
@@ -65,7 +63,6 @@
     swipeStartX = null;
     swipeStartY = null;
 
-    // Require a predominantly upward swipe of at least 30 px.
     if (
       deltaY > -SWIPE_THRESHOLD_PX ||
       Math.abs(deltaX) > Math.abs(deltaY)
@@ -78,7 +75,6 @@
 
   window.postMessage({ command: "getSpeedConfig" });
 
-  // Immediate game/page refresh without changing the existing logic above.
   let refreshStartX = null;
   let refreshStartY = null;
 
