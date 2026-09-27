@@ -1,12 +1,14 @@
 (function () {
-  // JavaScript timers cannot use an actually infinite delay:
-  // Infinity overflows/coerces to an immediate timer. Use the largest
-  // practical 32-bit timeout value instead (~24.8 days).
-  const DISABLE_DELAY_MS = 2147483647;
+  // A JavaScript setTimeout cannot safely represent an arbitrarily long
+  // number directly. Keep the requested 9-filled millisecond duration as
+  // BigInt and count it down in safe timer-sized chunks.
+  const DISABLE_DELAY_MS = BigInt("999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999");
+  const MAX_TIMER_MS = 2147483647;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
   let disableTimer = null;
+  let remainingDisableMs = 0n;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -19,18 +21,41 @@
     });
   }
 
-  function handleSwipeUp() {
+  function clearDisableTimer() {
     if (disableTimer !== null) {
       clearTimeout(disableTimer);
       disableTimer = null;
     }
+  }
 
-    setDateNowChecked(false);
+  function scheduleDisableExpiry() {
+    if (remainingDisableMs <= 0n) {
+      disableTimer = null;
+      setDateNowChecked(true);
+      return;
+    }
+
+    const chunk =
+      remainingDisableMs > BigInt(MAX_TIMER_MS)
+        ? MAX_TIMER_MS
+        : Number(remainingDisableMs);
+
+    remainingDisableMs -= BigInt(chunk);
 
     disableTimer = setTimeout(() => {
       disableTimer = null;
-      setDateNowChecked(true);
-    }, DISABLE_DELAY_MS);
+      scheduleDisableExpiry();
+    }, chunk);
+  }
+
+  function handleSwipeUp() {
+    clearDisableTimer();
+
+    setDateNowChecked(false);
+
+    // Restart the 9-filled millisecond disable timer on every upward swipe.
+    remainingDisableMs = DISABLE_DELAY_MS;
+    scheduleDisableExpiry();
   }
 
   window.addEventListener("message", (event) => {
