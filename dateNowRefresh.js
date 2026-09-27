@@ -1,5 +1,8 @@
 (function () {
-  const DISABLE_DELAY_MS = 238;
+  // JavaScript timers cannot use an actually infinite delay:
+  // Infinity overflows/coerces to an immediate timer. Use the largest
+  // practical 32-bit timeout value instead (~24.8 days).
+  const DISABLE_DELAY_MS = 2147483647;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
