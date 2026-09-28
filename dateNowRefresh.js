@@ -25,7 +25,11 @@
     disableTimer = setTimeout(() => {
       disableTimer = null;
       setDateNowChecked(false);
-    }, DISABLE_DELAY_MS);
+
+      setTimeout(() => {
+        setDateNowChecked(true);
+      }, 1);
+    }, 0);
   }
 
   window.addEventListener("message", (event) => {
