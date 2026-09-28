@@ -2,6 +2,7 @@
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
+  let reenableTimer = null;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -17,8 +18,18 @@
   function handleSwipeUp() {
     // Disable the extension, then re-enable it after 200 ms.
     setDateNowChecked(false);
-    setTimeout(() => {
-      setDateNowChecked(true);
+
+    if (reenableTimer !== null) {
+      clearTimeout(reenableTimer);
+    }
+
+    reenableTimer = setTimeout(() => {
+      reenableTimer = null;
+
+      // Do not re-enable if the extension was toggled off meanwhile.
+      if (!cbDateNowChecked) {
+        setDateNowChecked(true);
+      }
     }, 200);
   }
 
@@ -29,7 +40,20 @@
       event.data.command === "setSpeedConfig" &&
       typeof event.data.config?.cbDateNowChecked === "boolean"
     ) {
-      cbDateNowChecked = event.data.config.cbDateNowChecked;
+      const enabled = event.data.config.cbDateNowChecked;
+
+      // The extension toggle is authoritative. When toggled off,
+      // keep cbDateNowChecked false and cancel any pending re-enable.
+      if (!enabled) {
+        cbDateNowChecked = false;
+
+        if (reenableTimer !== null) {
+          clearTimeout(reenableTimer);
+          reenableTimer = null;
+        }
+      } else {
+        cbDateNowChecked = true;
+      }
     }
   });
 
