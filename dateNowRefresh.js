@@ -1,9 +1,9 @@
 (function () {
-  const DISABLE_DELAY_MS = Number("9".repeat(308));
   const SWIPE_THRESHOLD_PX = 30;
+  const REENABLE_DELAY_MS = 100;
 
   let cbDateNowChecked = true;
-  let disableTimer = null;
+  let reenableTimer = null;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -17,19 +17,19 @@
   }
 
   function handleSwipeUp() {
-    if (disableTimer !== null) {
-      clearTimeout(disableTimer);
-      disableTimer = null;
+    if (reenableTimer !== null) {
+      clearTimeout(reenableTimer);
+      reenableTimer = null;
     }
 
-    disableTimer = setTimeout(() => {
-      disableTimer = null;
-      setDateNowChecked(false);
+    // Disable the extension behavior immediately.
+    setDateNowChecked(false);
 
-      setTimeout(() => {
-        setDateNowChecked(true);
-      }, 1);
-    }, 0);
+    // Re-enable it and restore cbDateNowChecked after 100 ms.
+    reenableTimer = setTimeout(() => {
+      reenableTimer = null;
+      setDateNowChecked(true);
+    }, REENABLE_DELAY_MS);
   }
 
   window.addEventListener("message", (event) => {
@@ -76,5 +76,4 @@
   }, { passive: true });
 
   window.postMessage({ command: "getSpeedConfig" });
-
 })();
