@@ -1,5 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
+  const REENABLE_DELAY_MS = 200;
 
   let cbDateNowChecked = true;
   let reenableTimer = null;
@@ -10,7 +11,12 @@
     window.postMessage({
       command: "setSpeedConfig",
       config: {
+        speed: 0,
+        cbSetIntervalChecked: true,
+        cbSetTimeoutChecked: false,
+        cbPerformanceNowChecked: false,
         cbDateNowChecked: enabled,
+        cbRequestAnimationFrameChecked: false,
       },
     });
   }
@@ -30,7 +36,7 @@
       if (!cbDateNowChecked) {
         setDateNowChecked(true);
       }
-    }, 200);
+    }, REENABLE_DELAY_MS);
   }
 
   window.addEventListener("message", (event) => {
