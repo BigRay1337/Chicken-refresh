@@ -18,6 +18,7 @@ function pageScript() {
 
   const STARTUP_INTERVAL_MS = 1;
   let pageInitializing = true;
+  let extensionEnabled = speedConfig.cbDateNowChecked;
 
   const DATE_NOW_DISABLED_RELOAD_MS = 567;
   let dateNowDisableReloadTimer = null;
@@ -37,7 +38,9 @@ function pageScript() {
       originalClearInterval(timer.id);
       if (timer.customTimerId) originalClearInterval(timer.customTimerId);
       if (!timer.finished) {
-        const interval = pageInitializing
+        const interval = !extensionEnabled
+          ? timer.timeout
+          : pageInitializing
           ? STARTUP_INTERVAL_MS
           : speedConfig.cbSetIntervalChecked && speedConfig.speed > 0
             ? timer.timeout / speedConfig.speed
@@ -57,13 +60,12 @@ function pageScript() {
 
   window.addEventListener("message", (e) => {
     if (e.data.command === "setSpeedConfig") {
-      const previousDateNowEnabled = speedConfig.cbDateNowChecked;
+      const previousDateNowEnabled = extensionEnabled;
       speedConfig = e.data.config;
+      extensionEnabled = speedConfig.cbDateNowChecked;
       reloadTimers();
 
-      if (previousDateNowEnabled && !speedConfig.cbDateNowChecked) {
-        scheduleDateNowDisabledReload();
-      } else if (speedConfig.cbDateNowChecked && dateNowDisableReloadTimer !== null) {
+      if (!extensionEnabled && dateNowDisableReloadTimer !== null) {
         originalclearTimeout(dateNowDisableReloadTimer);
         dateNowDisableReloadTimer = null;
       }
@@ -94,7 +96,9 @@ function pageScript() {
 
   window.setInterval = (handler, timeout, ...args) => {
     if (!timeout) timeout = 0;
-    const interval = pageInitializing
+    const interval = !extensionEnabled
+      ? timeout
+      : pageInitializing
       ? STARTUP_INTERVAL_MS
       : speedConfig.cbSetIntervalChecked && speedConfig.speed > 0
         ? timeout / speedConfig.speed
@@ -106,7 +110,7 @@ function pageScript() {
 
   window.setTimeout = (handler, timeout, ...args) => {
     if (!timeout) timeout = 0;
-    const delay = speedConfig.cbSetTimeoutChecked && speedConfig.speed > 0
+    const delay = extensionEnabled && speedConfig.cbSetTimeoutChecked && speedConfig.speed > 0
       ? timeout / speedConfig.speed
       : timeout;
     return originalSetTimeout(handler, delay, ...args);
@@ -119,7 +123,7 @@ function pageScript() {
       const originalValue = originalPerformanceNow();
       if (performanceNowValue) {
         performanceNowValue += (originalValue - previusPerformanceNowValue) *
-          (speedConfig.cbPerformanceNowChecked ? speedConfig.speed : 1);
+          (extensionEnabled && speedConfig.cbPerformanceNowChecked ? speedConfig.speed : 1);
       } else {
         performanceNowValue = originalValue;
       }
@@ -135,12 +139,12 @@ function pageScript() {
       const originalValue = originalDateNow();
       if (dateNowValue) {
         dateNowValue += (originalValue - previusDateNowValue) *
-          (speedConfig.cbDateNowChecked ? speedConfig.speed : Math.floor(0 + dateNowValue));
+          (extensionEnabled ? speedConfig.speed : 1);
       } else {
         dateNowValue = originalValue;
       }
       previusDateNowValue = originalValue;
-      return Math.floor(0 + dateNowValue);
+      return extensionEnabled ? Math.floor(0 + dateNowValue) : originalValue;
     };
   })();
 
@@ -149,6 +153,7 @@ function pageScript() {
     const callbackFunctions = [];
     const callbackTick = [];
     window.requestAnimationFrame = (callback) => {
+      if (!extensionEnabled) return originalRequestAnimationFrame(callback);
       if (disableRequestAnimationFrame) return 1;
       return originalRequestAnimationFrame(() => {
         const index = callbackFunctions.indexOf(callback);
