@@ -1,10 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const REENABLE_DELAY_MS = 200;
-
   let cbDateNowChecked = true;
-  let reenableTimer = null;
-
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
 
@@ -22,21 +18,9 @@
   }
 
   function handleSwipeUp() {
-    // Disable the extension, then re-enable it after 200 ms.
+    // Disable the extension, then re-enable it immediately with no wait.
     setDateNowChecked(false);
-
-    if (reenableTimer !== null) {
-      clearTimeout(reenableTimer);
-    }
-
-    reenableTimer = setTimeout(() => {
-      reenableTimer = null;
-
-      // Do not re-enable if the extension was toggled off meanwhile.
-      if (!cbDateNowChecked) {
-        setDateNowChecked(true);
-      }
-    }, REENABLE_DELAY_MS);
+    setDateNowChecked(true);
   }
 
   window.addEventListener("message", (event) => {
@@ -53,10 +37,6 @@
       if (!enabled) {
         cbDateNowChecked = false;
 
-        if (reenableTimer !== null) {
-          clearTimeout(reenableTimer);
-          reenableTimer = null;
-        }
       } else {
         cbDateNowChecked = true;
       }
