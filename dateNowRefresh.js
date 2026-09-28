@@ -6,9 +6,14 @@
   let disableTimer = null;
 
   function setDateNowChecked(enabled) {
-    // Spoof the local checkbox state only. Do not send the value to
-    // pageScript.js, so Date.now is not actually disabled.
     cbDateNowChecked = enabled;
+
+    window.postMessage({
+      command: "setSpeedConfig",
+      config: {
+        cbDateNowChecked: enabled,
+      },
+    });
   }
 
   function handleSwipeUp() {
