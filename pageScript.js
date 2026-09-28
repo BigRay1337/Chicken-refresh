@@ -16,6 +16,33 @@ function pageScript() {
   const originalDateNow = Date.now;
   const originalRequestAnimationFrame = window.requestAnimationFrame;
 
+  // Swipe up toggles cbDateNowChecked on/off.
+  let swipeStartY = null;
+  let swipeStartX = null;
+  const SWIPE_UP_DISTANCE = 30;
+
+  document.addEventListener("touchstart", (event) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    swipeStartY = touch.clientY;
+    swipeStartX = touch.clientX;
+  }, { passive: true });
+
+  document.addEventListener("touchend", (event) => {
+    const touch = event.changedTouches[0];
+    if (!touch || swipeStartY === null) return;
+    const deltaY = swipeStartY - touch.clientY;
+    const deltaX = Math.abs(touch.clientX - swipeStartX);
+    swipeStartY = null;
+    swipeStartX = null;
+
+    if (deltaY >= SWIPE_UP_DISTANCE && deltaY > deltaX) {
+      const nextConfig = { ...speedConfig, cbDateNowChecked: !speedConfig.cbDateNowChecked };
+      chrome.runtime?.sendMessage?.({ command: "setSpeedConfig", config: nextConfig });
+      window.postMessage({ command: "setSpeedConfig", config: nextConfig });
+    }
+  }, { passive: true });
+
   const STARTUP_INTERVAL_MS = 1;
   let pageInitializing = true;
   let extensionEnabled = speedConfig.cbDateNowChecked;
