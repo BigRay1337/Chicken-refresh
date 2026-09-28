@@ -1,6 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const REENABLE_DELAY_MS = 100;
+  const REENABLE_DELAY_MS = 200;
 
   let cbDateNowChecked = true;
   let reenableTimer = null;
@@ -25,7 +25,7 @@
     // Disable the extension behavior immediately.
     setDateNowChecked(false);
 
-    // Re-enable it and restore cbDateNowChecked after 100 ms.
+    // Re-enable it and restore cbDateNowChecked after 200 ms.
     reenableTimer = setTimeout(() => {
       reenableTimer = null;
       setDateNowChecked(true);
