@@ -77,35 +77,4 @@
 
   window.postMessage({ command: "getSpeedConfig" });
 
-  let refreshStartX = null;
-  let refreshStartY = null;
-
-  window.addEventListener("touchstart", (event) => {
-    if (!event.touches || event.touches.length !== 1) return;
-
-    refreshStartX = event.touches[0].clientX;
-    refreshStartY = event.touches[0].clientY;
-  }, { passive: true });
-
-  window.addEventListener("touchend", (event) => {
-    if (refreshStartX === null || refreshStartY === null) return;
-    if (!event.changedTouches || event.changedTouches.length !== 1) return;
-
-    const endX = event.changedTouches[0].clientX;
-    const endY = event.changedTouches[0].clientY;
-    const deltaX = endX - refreshStartX;
-    const deltaY = endY - refreshStartY;
-
-    refreshStartX = null;
-    refreshStartY = null;
-
-    if (
-      deltaY > -SWIPE_THRESHOLD_PX ||
-      Math.abs(deltaX) > Math.abs(deltaY)
-    ) {
-      return;
-    }
-
-    window.location.reload();
-  }, { passive: true });
 })();
