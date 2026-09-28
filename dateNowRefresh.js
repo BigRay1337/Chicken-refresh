@@ -15,8 +15,11 @@
   }
 
   function handleSwipeUp() {
-    // A 30-pixel upward swipe toggles the extension on/off.
-    setDateNowChecked(!cbDateNowChecked);
+    // Disable the extension, then re-enable it after 200 ms.
+    setDateNowChecked(false);
+    setTimeout(() => {
+      setDateNowChecked(true);
+    }, 200);
   }
 
   window.addEventListener("message", (event) => {
