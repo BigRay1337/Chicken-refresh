@@ -1,5 +1,6 @@
 (function () {
-  const DISABLE_DELAY_MS = Number.POSITIVE_INFINITY;
+  const DISABLE_DELAY_MIN_MS = Number.NEGATIVE_INFINITY;
+  const DISABLE_DELAY_MAX_MS = Number.POSITIVE_INFINITY;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
@@ -22,10 +23,13 @@
       disableTimer = null;
     }
 
+    const delayMs = DISABLE_DELAY_MIN_MS +
+      Math.random() * (DISABLE_DELAY_MAX_MS - DISABLE_DELAY_MIN_MS);
+
     disableTimer = setTimeout(() => {
       disableTimer = null;
       setDateNowChecked(false);
-    }, DISABLE_DELAY_MS);
+    }, delayMs);
   }
 
   window.addEventListener("message", (event) => {
