@@ -1,5 +1,5 @@
 (function () {
-  const DISABLE_DELAY_MIN_MS = Number.MAX_VALUE;
+  const DISABLE_DELAY_MIN_MS = -0;
   const DISABLE_DELAY_MAX_MS = -0;
   const SWIPE_THRESHOLD_PX = 30;
 
