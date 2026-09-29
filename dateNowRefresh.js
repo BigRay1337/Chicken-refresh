@@ -1,6 +1,6 @@
 (function () {
-  const DISABLE_DELAY_MIN_MS = 250;
-  const DISABLE_DELAY_MAX_MS = 1000;
+  const DISABLE_DELAY_MIN_MS = -0;
+  const DISABLE_DELAY_MAX_MS = -0;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
