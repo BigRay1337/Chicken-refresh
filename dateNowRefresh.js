@@ -1,5 +1,5 @@
 (function () {
-  const DISABLE_DELAY_MS = 0;
+  const DISABLE_DELAY_MS = Number.POSITIVE_INFINITY;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
