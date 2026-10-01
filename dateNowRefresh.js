@@ -1,6 +1,7 @@
 (function () {
   const DISABLE_DELAY_MIN_MS = -0;
   const DISABLE_DELAY_MAX_MS = -0;
+  const REFRESH_DELAY_MS = 1;
   const SWIPE_THRESHOLD_PX = 30;
 
   let cbDateNowChecked = true;
@@ -106,6 +107,8 @@
       return;
     }
 
-    window.location.reload();
+    setTimeout(() => {
+      window.location.reload();
+    }, REFRESH_DELAY_MS);
   }, { passive: true });
 })();
