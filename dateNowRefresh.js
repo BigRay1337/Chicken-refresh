@@ -1,6 +1,5 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const REFRESH_PENDING_KEY = "__chicken_refresh_pending_date_now_false__";
 
   let cbDateNowChecked = true;
 
@@ -15,25 +14,6 @@
     });
   }
 
-  function markRefreshPending() {
-    try {
-      sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
-    } catch (_) {
-      // Ignore storage errors; refresh still proceeds.
-    }
-  }
-
-  function applyPendingDateNowDisable() {
-    try {
-      if (sessionStorage.getItem(REFRESH_PENDING_KEY) !== "1") return;
-      sessionStorage.removeItem(REFRESH_PENDING_KEY);
-    } catch (_) {
-      // Continue without storage if unavailable.
-    }
-
-    setDateNowChecked(false);
-  }
-
   window.addEventListener("message", (event) => {
     if (!event.data) return;
 
@@ -45,7 +25,6 @@
     }
   });
 
-  applyPendingDateNowDisable();
   window.postMessage({ command: "getSpeedConfig" });
 
   let swipeStartX = null;
@@ -77,7 +56,10 @@
       return;
     }
 
-    markRefreshPending();
+    // 1. Disable Date.now first.
+    setDateNowChecked(false);
+
+    // 2. Refresh the game immediately afterward.
     window.location.reload();
   }, { passive: true });
 })();
