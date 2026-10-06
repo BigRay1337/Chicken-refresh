@@ -1,11 +1,8 @@
 (function () {
-  const DISABLE_DELAY_MIN_MS = -0;
-  const DISABLE_DELAY_MAX_MS = -0;
-  const REFRESH_DELAY_MS = 1;
   const SWIPE_THRESHOLD_PX = 30;
+  const REFRESH_PENDING_KEY = "__chicken_refresh_pending_date_now_false__";
 
   let cbDateNowChecked = true;
-  let disableTimer = null;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -18,19 +15,23 @@
     });
   }
 
-  function handleSwipeUp() {
-    if (disableTimer !== null) {
-      clearTimeout(disableTimer);
-      disableTimer = null;
+  function markRefreshPending() {
+    try {
+      sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
+    } catch (_) {
+      // Ignore storage errors; refresh still proceeds.
+    }
+  }
+
+  function applyPendingDateNowDisable() {
+    try {
+      if (sessionStorage.getItem(REFRESH_PENDING_KEY) !== "1") return;
+      sessionStorage.removeItem(REFRESH_PENDING_KEY);
+    } catch (_) {
+      // Continue without storage if unavailable.
     }
 
-    const delayMs = DISABLE_DELAY_MIN_MS +
-      Math.random() * (DISABLE_DELAY_MAX_MS - DISABLE_DELAY_MIN_MS);
-
-    disableTimer = setTimeout(() => {
-      disableTimer = null;
-      setDateNowChecked(false);
-    }, delayMs);
+    setDateNowChecked(false);
   }
 
   window.addEventListener("message", (event) => {
@@ -43,6 +44,9 @@
       cbDateNowChecked = event.data.config.cbDateNowChecked;
     }
   });
+
+  applyPendingDateNowDisable();
+  window.postMessage({ command: "getSpeedConfig" });
 
   let swipeStartX = null;
   let swipeStartY = null;
@@ -73,42 +77,7 @@
       return;
     }
 
-    handleSwipeUp();
-  }, { passive: true });
-
-  window.postMessage({ command: "getSpeedConfig" });
-
-  let refreshStartX = null;
-  let refreshStartY = null;
-
-  window.addEventListener("touchstart", (event) => {
-    if (!event.touches || event.touches.length !== 1) return;
-
-    refreshStartX = event.touches[0].clientX;
-    refreshStartY = event.touches[0].clientY;
-  }, { passive: true });
-
-  window.addEventListener("touchend", (event) => {
-    if (refreshStartX === null || refreshStartY === null) return;
-    if (!event.changedTouches || event.changedTouches.length !== 1) return;
-
-    const endX = event.changedTouches[0].clientX;
-    const endY = event.changedTouches[0].clientY;
-    const deltaX = endX - refreshStartX;
-    const deltaY = endY - refreshStartY;
-
-    refreshStartX = null;
-    refreshStartY = null;
-
-    if (
-      deltaY > -SWIPE_THRESHOLD_PX ||
-      Math.abs(deltaX) > Math.abs(deltaY)
-    ) {
-      return;
-    }
-
-    setTimeout(() => {
-      window.location.reload();
-    }, REFRESH_DELAY_MS);
+    markRefreshPending();
+    window.location.reload();
   }, { passive: true });
 })();
