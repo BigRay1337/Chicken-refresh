@@ -1,6 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_DELAY_MS = 1432;
+  const SWIPE_DELAY_MS = 2341;
 
   let cbDateNowChecked = true;
 
