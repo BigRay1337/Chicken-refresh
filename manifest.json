@@ -1,5 +1,4 @@
 {
-  "update_url": "https://clients2.google.com/service/update2/crx",
   "manifest_version": 3,
   "name": "HTML5 Universal Speed Hack",
   "description": "Speeds up or slows down browser games, HTML5 and more...",
@@ -16,7 +15,9 @@
     "default_popup": "index.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "scripts": [
+      "background.js"
+    ]
   },
   "content_scripts": [
     {
