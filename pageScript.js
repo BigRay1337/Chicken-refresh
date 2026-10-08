@@ -2,6 +2,10 @@ function pageScript() {
   const dateNowFreezeRequested =
     sessionStorage.getItem("__chickenDateNowFreeze") === "1";
 
+  if (dateNowFreezeRequested) {
+    sessionStorage.removeItem("__chickenDateNowFreeze");
+  }
+
   let speedConfig = {
     speed: 0,
     cbSetIntervalChecked: true,
@@ -81,6 +85,17 @@ function pageScript() {
   });
 
   window.postMessage({ command: "getSpeedConfig" });
+
+  // After the game reloads, release the Date.now freeze.
+  if (dateNowFreezeRequested) {
+    originalSetTimeout(() => {
+      speedConfig.cbDateNowChecked = true;
+      window.postMessage({
+        command: "setSpeedConfig",
+        config: { cbDateNowChecked: true },
+      });
+    }, 0);
+  }
 
   window.clearInterval = (id) => {
     originalClearInterval(id);
