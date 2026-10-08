@@ -1,6 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_DELAY_MS = 2341;
+  const SWIPE_DELAY_MS = 2431;
 
   let cbDateNowChecked = true;
 
@@ -59,13 +59,10 @@
 
     // Wait 1432 ms before the swipe can interact with the extension.
     setTimeout(() => {
-      // Freeze Date.now across the reload.
-      sessionStorage.setItem("__chickenDateNowFreeze", "1");
-
-      // Disable Date.now before refreshing.
+      // 1. Disable Date.now.
       setDateNowChecked(false);
 
-      // Refresh the game afterward.
+      // 2. Refresh the game afterward.
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
