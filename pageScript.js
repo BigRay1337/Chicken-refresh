@@ -164,7 +164,7 @@ function pageScript() {
           ? speedConfig.speed
           : speedConfig.speed === 0
             ? 0.371
-            : 0.3710001;
+            : 0.371;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
