@@ -160,7 +160,7 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const multiplier = speedConfig.cbDateNowChecked ? speedConfig.speed : 0.371000123;
+        const multiplier = speedConfig.cbDateNowChecked ? speedConfig.speed : 0.3710001234;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
