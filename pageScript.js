@@ -162,9 +162,7 @@ function pageScript() {
       if (dateNowValue !== null) {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : speedConfig.speed === 0
-            ? 0.371
-            : 0.371;
+          : 0.3710001234;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
