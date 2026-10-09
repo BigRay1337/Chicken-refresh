@@ -160,8 +160,11 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // Keep using the configured original speed even when Date.now is unchecked.
-        const multiplier = speedConfig.speed;
+        const multiplier = speedConfig.cbDateNowChecked
+          ? speedConfig.speed
+          : speedConfig.speed === 0
+            ? 0.371
+            : 0.3710001;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
