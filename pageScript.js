@@ -18,7 +18,6 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const SPEED_CODE = 0.371;
-  const FALLBACK_SPEED = 0.3710001234;
   let pageInitializing = true;
 
   let timers = [];
@@ -70,12 +69,7 @@ function pageScript() {
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
 
-    if (previousDateNowChecked === null) {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    } else {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    }
-
+    previousDateNowChecked = speedConfig.cbDateNowChecked;
     reloadTimers();
   });
 
@@ -153,7 +147,7 @@ function pageScript() {
     };
   })();
 
-  // Date.now
+  // Date.now: use a 0.371 multiplier while enabled; otherwise hold dateNowValue steady.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -162,16 +156,16 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const multiplier = speedConfig.cbDateNowChecked
-          ? SPEED_CODE
-          : FALLBACK_SPEED;
-        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
+        if (speedConfig.cbDateNowChecked) {
+          dateNowValue += (originalValue - previousDateNowValue) * SPEED_CODE;
+        }
+        // When disabled, dateNowValue remains the fallback time value.
       } else {
         dateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(0 + dateNowValue);
+      return Math.floor(dateNowValue);
     };
   })();
 
