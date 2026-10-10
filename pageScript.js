@@ -18,7 +18,7 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const SPEED_CODE = 0.371000;
-  const DATE_NOW_FALSE_SPEED = 0.371;
+  const DATE_NOW_FALSE_SPEED = SPEED_CODE;
   let pageInitializing = true;
 
   let timers = [];
