@@ -149,9 +149,8 @@ function pageScript() {
     };
   })();
 
-  // Date.now: true starts at speed 0; false uses 0.371.
-  // If 0.371 is not finite, fall back to the primary dateNowValue,
-  // then a second independent dateNowValue fallback.
+  // Date.now: true starts at speed 0; false uses finite speed 0.371.
+  // Both the primary and fallback dateNowValue remain finite when possible.
   (function () {
     let dateNowValue = null;
     let fallbackDateNowValue = null;
@@ -160,19 +159,46 @@ function pageScript() {
     Date.now = () => {
       const originalValue = originalDateNow();
 
-      if (dateNowValue !== null) {
+      if (dateNowValue === null || !Number.isFinite(dateNowValue)) {
+        dateNowValue = Number.isFinite(fallbackDateNowValue)
+          ? fallbackDateNowValue
+          : originalValue;
+      }
+      if (fallbackDateNowValue === null || !Number.isFinite(fallbackDateNowValue)) {
+        fallbackDateNowValue = Number.isFinite(dateNowValue)
+          ? dateNowValue
+          : originalValue;
+      }
+
+      if (previousDateNowValue !== null) {
+        const elapsed = originalValue - previousDateNowValue;
         const falseSpeed = Number.isFinite(DATE_NOW_FALSE_SPEED)
           ? DATE_NOW_FALSE_SPEED
           : DATE_NOW_FALLBACK_SPEED;
+        const fallbackSpeed = Number.isFinite(DATE_NOW_FALLBACK_SPEED)
+          ? DATE_NOW_FALLBACK_SPEED
+          : 0.371;
         const multiplier = speedConfig.cbDateNowChecked
           ? DATE_NOW_TRUE_SPEED
-          : (Number.isFinite(falseSpeed)
-              ? falseSpeed
-              : DATE_NOW_FALLBACK_SPEED);
+          : (Number.isFinite(falseSpeed) ? falseSpeed : fallbackSpeed);
 
-        const elapsed = originalValue - previousDateNowValue;
         dateNowValue += elapsed * multiplier;
-        fallbackDateNowValue += elapsed * multiplier;
+        fallbackDateNowValue += elapsed * (
+          speedConfig.cbDateNowChecked
+            ? DATE_NOW_TRUE_SPEED
+            : (Number.isFinite(fallbackSpeed) ? fallbackSpeed : 0.371)
+        );
+
+        if (!Number.isFinite(dateNowValue)) {
+          dateNowValue = Number.isFinite(fallbackDateNowValue)
+            ? fallbackDateNowValue
+            : originalValue;
+        }
+        if (!Number.isFinite(fallbackDateNowValue)) {
+          fallbackDateNowValue = Number.isFinite(dateNowValue)
+            ? dateNowValue
+            : originalValue;
+        }
       } else {
         dateNowValue = originalValue;
         fallbackDateNowValue = originalValue;
