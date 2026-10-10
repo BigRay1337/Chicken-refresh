@@ -18,6 +18,7 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const SPEED_CODE = 0.371000;
+  const DATE_NOW_FALSE_SPEED = 0.371;
   let pageInitializing = true;
 
   let timers = [];
@@ -147,8 +148,8 @@ function pageScript() {
     };
   })();
 
-  // Date.now: when disabled, use the 0.371000 fallback multiplier; when enabled,
-  // use the configured speed (which starts at 0).
+  // Date.now: when disabled, use 0.371; when enabled, use the configured speed,
+  // which starts at 0. SPEED_CODE remains the 0.371000 fallback constant.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -159,7 +160,7 @@ function pageScript() {
       if (dateNowValue !== null) {
         const dateNowMultiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : SPEED_CODE;
+          : DATE_NOW_FALSE_SPEED;
         dateNowValue += (originalValue - previousDateNowValue) * dateNowMultiplier;
       } else {
         dateNowValue = originalValue;
