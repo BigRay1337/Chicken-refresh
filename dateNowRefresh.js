@@ -1,6 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_DELAY_MS = 2430;
+  const SWIPE_DELAY_MS = 2429.89;
 
   let cbDateNowChecked = true;
 
@@ -57,11 +57,10 @@
       return;
     }
 
-    // Disable Date.now 2430 ms after the upward swipe.
+    // Turn Date.now off 2429.89 ms after the upward swipe, then refresh.
+    // The refreshed page starts with Date.now enabled again.
     setTimeout(() => {
       setDateNowChecked(false);
-
-      // Refresh immediately; the extension's default Date.now state is enabled on reload.
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
