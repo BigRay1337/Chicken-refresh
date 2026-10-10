@@ -1,10 +1,8 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  // Keep the existing swipe-up delay.
   const SWIPE_DELAY_MS = 2431;
 
   let cbDateNowChecked = true;
-  let swipePending = false;
 
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
@@ -42,11 +40,7 @@
 
   window.addEventListener("touchend", (event) => {
     if (swipeStartX === null || swipeStartY === null) return;
-    if (!event.changedTouches || event.changedTouches.length !== 1) {
-      swipeStartX = null;
-      swipeStartY = null;
-      return;
-    }
+    if (!event.changedTouches || event.changedTouches.length !== 1) return;
 
     const endX = event.changedTouches[0].clientX;
     const endY = event.changedTouches[0].clientY;
@@ -58,20 +52,17 @@
 
     if (
       deltaY > -SWIPE_THRESHOLD_PX ||
-      Math.abs(deltaX) > Math.abs(deltaY) ||
-      swipePending
+      Math.abs(deltaX) > Math.abs(deltaY)
     ) {
       return;
     }
 
-    swipePending = true;
-
-    // Turn Date.now off as soon as the swipe is detected.
-    setDateNowChecked(false);
-
-    // Restore it after the configured swipe-up delay, then refresh the game.
+    // Wait 1432 ms before the swipe can interact with the extension.
     setTimeout(() => {
-      setDateNowChecked(true);
+      // 1. Disable Date.now.
+      setDateNowChecked(false);
+
+      // 2. Refresh the game afterward.
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
