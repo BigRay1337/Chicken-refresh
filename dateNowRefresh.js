@@ -1,6 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_DELAY_MS = 1;
+  const SWIPE_DELAY_MS = 2431;
 
   let cbDateNowChecked = true;
 
@@ -57,10 +57,12 @@
       return;
     }
 
-    // Disable Date.now 1 ms after swipe-up, then refresh the game.
-    // The reloaded page starts with Date.now enabled again.
+    // Wait 1432 ms before the swipe can interact with the extension.
     setTimeout(() => {
+      // 1. Disable Date.now.
       setDateNowChecked(false);
+
+      // 2. Refresh the game afterward.
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
