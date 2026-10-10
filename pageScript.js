@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const SPEED_CODE = 0.3710001234;
+  const SPEED_CODE = 0.371000;
   let pageInitializing = true;
 
   let timers = [];
@@ -147,7 +147,7 @@ function pageScript() {
     };
   })();
 
-  // Date.now: when disabled, use the 0.371 fallback multiplier; when enabled,
+  // Date.now: when disabled, use the 0.371000 fallback multiplier; when enabled,
   // use the configured speed (which starts at 0).
   (function () {
     let dateNowValue = null;
