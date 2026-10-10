@@ -1,6 +1,7 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_DELAY_MS = 2431;
+  const SWIPE_DELAY_MS = 2428;
+  const REENABLE_DELAY_MS = 2428;
 
   let cbDateNowChecked = true;
 
@@ -57,13 +58,15 @@
       return;
     }
 
-    // After the swipe delay, switch Date.now off and immediately back on.
+    // Turn Date.now off 2428 ms after the upward swipe.
     setTimeout(() => {
       setDateNowChecked(false);
-      setDateNowChecked(true);
 
-      // Refresh the game after the toggle sequence.
-      window.location.reload();
+      // Restore Date.now automatically after another 2428 ms.
+      setTimeout(() => {
+        setDateNowChecked(true);
+        window.location.reload();
+      }, REENABLE_DELAY_MS);
     }, SWIPE_DELAY_MS);
   }, { passive: true });
 })();
