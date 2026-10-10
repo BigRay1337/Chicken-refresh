@@ -57,13 +57,13 @@
       return;
     }
 
-    // Wait 1432 ms before the swipe can interact with the extension.
-    setTimeout(() => {
-      // 1. Disable Date.now.
-      setDateNowChecked(false);
+    // Turn the extension's Date.now override off immediately on swipe.
+    setDateNowChecked(false);
 
-      // 2. Refresh the game afterward.
+    // Turn it back on after SWIPE_DELAY_MS, then refresh the game.
+    setTimeout(() => {
       window.location.reload();
+      setDateNowChecked(true);
     }, SWIPE_DELAY_MS);
   }, { passive: true });
 })();
