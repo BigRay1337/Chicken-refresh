@@ -157,7 +157,7 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const falseSpeed = 0 + dateNowValue;
+        const falseSpeed = 0.371 + dateNowValue;
         const multiplier = speedConfig.cbDateNowChecked
           ? DATE_NOW_TRUE_SPEED
           : (Number.isFinite(falseSpeed) ? falseSpeed : dateNowValue);
