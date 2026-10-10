@@ -148,8 +148,8 @@ function pageScript() {
     };
   })();
 
-  // Date.now: true uses speed 0; false uses 0.371.
-  // If the false-speed value is ever non-finite, fall back to dateNowValue.
+  // Date.now: true starts at speed 0; false uses 0.371.
+  // If the false-speed value is non-finite, try two dateNowValue fallbacks.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -161,7 +161,9 @@ function pageScript() {
         const falseSpeed = DATE_NOW_FALSE_SPEED;
         const multiplier = speedConfig.cbDateNowChecked
           ? DATE_NOW_TRUE_SPEED
-          : (Number.isFinite(falseSpeed) ? falseSpeed : dateNowValue);
+          : (Number.isFinite(falseSpeed)
+              ? falseSpeed
+              : (Number.isFinite(dateNowValue) ? dateNowValue : dateNowValue));
 
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
