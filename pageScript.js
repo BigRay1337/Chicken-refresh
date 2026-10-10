@@ -18,7 +18,6 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_TRUE_SPEED = 0;
-  const DATE_NOW_FALSE_SPEED_OFFSET = 0.36999999999;
   let pageInitializing = true;
 
   let timers = [];
@@ -148,7 +147,7 @@ function pageScript() {
     };
   })();
 
-  // Date.now: true uses speed 0; false uses 0.36999999999 + dateNowValue,
+  // Date.now: true uses speed 0; false uses 0 + dateNowValue,
   // falling back to dateNowValue if the calculated speed is not finite.
   (function () {
     let dateNowValue = null;
@@ -158,7 +157,7 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const falseSpeed = DATE_NOW_FALSE_SPEED_OFFSET + dateNowValue;
+        const falseSpeed = 0 + dateNowValue;
         const multiplier = speedConfig.cbDateNowChecked
           ? DATE_NOW_TRUE_SPEED
           : (Number.isFinite(falseSpeed) ? falseSpeed : dateNowValue);
