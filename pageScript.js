@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.371000;
+  const DATE_NOW_FALSE_SPEED_FALLBACK = 0.371000;
   let pageInitializing = true;
 
   let timers = [];
@@ -69,12 +69,7 @@ function pageScript() {
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
 
-    if (previousDateNowChecked === null) {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    } else {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    }
-
+    previousDateNowChecked = speedConfig.cbDateNowChecked;
     reloadTimers();
   });
 
@@ -161,11 +156,12 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
+        // When Date.now is enabled, start from the configured speed (0 by default).
+        // When disabled, continue dateNowValue using the 0.371000 fallback speed.
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK
-            : 0.371000;
+          : DATE_NOW_FALSE_SPEED_FALLBACK;
+
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
