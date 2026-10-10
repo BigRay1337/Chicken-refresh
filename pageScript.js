@@ -149,9 +149,11 @@ function pageScript() {
   })();
 
   // Date.now: true starts at speed 0; false uses 0.371.
-  // If the false-speed value is non-finite, try two dateNowValue fallbacks.
+  // If 0.371 is not finite, fall back to the primary dateNowValue,
+  // then a second independent dateNowValue fallback.
   (function () {
     let dateNowValue = null;
+    let fallbackDateNowValue = null;
     let previousDateNowValue = null;
 
     Date.now = () => {
@@ -163,11 +165,18 @@ function pageScript() {
           ? DATE_NOW_TRUE_SPEED
           : (Number.isFinite(falseSpeed)
               ? falseSpeed
-              : (Number.isFinite(dateNowValue) ? dateNowValue : dateNowValue));
+              : (Number.isFinite(dateNowValue)
+                  ? dateNowValue
+                  : (Number.isFinite(fallbackDateNowValue)
+                      ? fallbackDateNowValue
+                      : 0.371)));
 
-        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
+        const elapsed = originalValue - previousDateNowValue;
+        dateNowValue += elapsed * multiplier;
+        fallbackDateNowValue += elapsed * multiplier;
       } else {
         dateNowValue = originalValue;
+        fallbackDateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
