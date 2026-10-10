@@ -156,10 +156,10 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        if (speedConfig.cbDateNowChecked) {
-          dateNowValue += (originalValue - previousDateNowValue) * SPEED_CODE;
-        }
-        // When disabled, dateNowValue remains the fallback time value.
+        // Enabled: advance Date.now at 0.371x. Disabled: keep dateNowValue
+        // as the fallback value. The extension's initial speed remains 0.
+        const dateNowMultiplier = speedConfig.cbDateNowChecked ? SPEED_CODE : 0;
+        dateNowValue += (originalValue - previousDateNowValue) * dateNowMultiplier;
       } else {
         dateNowValue = originalValue;
       }
