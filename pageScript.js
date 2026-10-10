@@ -147,7 +147,8 @@ function pageScript() {
     };
   })();
 
-  // Date.now: use a 0.371 multiplier whether enabled or disabled; retain dateNowValue as the fallback.
+  // Date.now: when disabled, use the 0.371 fallback multiplier; when enabled,
+  // use the configured speed (which starts at 0).
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -156,9 +157,9 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // Both checkbox states advance Date.now at 0.371x. dateNowValue remains
-        // the fallback value, and the extension's initial speed remains 0.
-        const dateNowMultiplier = SPEED_CODE;
+        const dateNowMultiplier = speedConfig.cbDateNowChecked
+          ? speedConfig.speed
+          : SPEED_CODE;
         dateNowValue += (originalValue - previousDateNowValue) * dateNowMultiplier;
       } else {
         dateNowValue = originalValue;
