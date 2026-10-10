@@ -1,6 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_DELAY_MS = 2425;
+  const SWIPE_DELAY_MS = 2000;
 
   let cbDateNowChecked = true;
 
@@ -57,7 +57,7 @@
       return;
     }
 
-    // Wait 2425 ms, disable Date.now, then refresh the game.
+    // Wait 2000 ms, disable Date.now, then refresh the game.
     // The reloaded page starts with Date.now enabled again.
     setTimeout(() => {
       setDateNowChecked(false);
