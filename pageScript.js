@@ -165,8 +165,8 @@ function pageScript() {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
         const selectedSpeed = isDateNowChecked
-          ? DATE_NOW_TRUE_SPEED
-          : DATE_NOW_FALSE_SPEED;
+          ? 0
+          : 0.371 - dateNowValue;
         const multiplier = Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
 
         dateNowValue += elapsed * multiplier;
