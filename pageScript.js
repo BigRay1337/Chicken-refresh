@@ -1,6 +1,6 @@
 function pageScript() {
   let speedConfig = {
-    speed: 0,
+    speed: 0.370,
     cbSetIntervalChecked: true,
     cbSetTimeoutChecked: false,
     cbPerformanceNowChecked: false,
@@ -15,6 +15,7 @@ function pageScript() {
   const originalPerformanceNow = window.performance.now.bind(window.performance);
   const originalRequestAnimationFrame = window.requestAnimationFrame;
   const originalDateNow = Date.now;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   let pageInitializing = true;
@@ -151,7 +152,7 @@ function pageScript() {
     };
   })();
 
-  // Date.now fallback multipliers use dateNowValue directly.
+  // Date.now uses the named dateNowValue fallback directly as its multiplier.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -163,7 +164,10 @@ function pageScript() {
         const multiplier =
           speedConfig.cbDateNowChecked && speedConfig.speed !== 0
             ? speedConfig.speed
-            : dateNowValue;
+            : DATE_NOW_ZERO_SPEED_FALLBACK === "dateNowValue"
+              ? dateNowValue
+              : 0.370;
+
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
