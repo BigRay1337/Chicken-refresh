@@ -54,7 +54,6 @@ function pageScript() {
     timers = newTimers;
   };
 
-  // Do not reload or refresh the page when settings change.
   originalSetTimeout(() => {
     pageInitializing = false;
     reloadTimers();
@@ -150,25 +149,17 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true freezes dateNowValue at speed 0; checked=false uses normal time progression. No 0.371 speed spoofing.
-  // Invalid values recover from finite dateNowValue state.
+  // Date.now: checked=true freezes dateNowValue at speed 0; checked=false advances dateNowValue at false speed.
+  // The fallback also uses dateNowValue, avoiding a separate clock with different progression.
   (function () {
     let dateNowValue = null;
-    let fallbackDateNowValue = null;
     let previousDateNowValue = null;
 
     Date.now = () => {
       const originalValue = originalDateNow();
 
       if (dateNowValue === null || !Number.isFinite(dateNowValue)) {
-        dateNowValue = Number.isFinite(fallbackDateNowValue)
-          ? fallbackDateNowValue
-          : originalValue;
-      }
-      if (fallbackDateNowValue === null || !Number.isFinite(fallbackDateNowValue)) {
-        fallbackDateNowValue = Number.isFinite(dateNowValue)
-          ? dateNowValue
-          : originalValue;
+        dateNowValue = originalValue;
       }
 
       if (previousDateNowValue !== null) {
@@ -180,37 +171,26 @@ function pageScript() {
         const selectedFallbackSpeed = isDateNowChecked
           ? DATE_NOW_TRUE_FALLBACK_SPEED
           : DATE_NOW_FALSE_FALLBACK_SPEED;
-        // Checked=true starts at speed 0. Checked=false uses the finite fallback
-        // speed, recovering to the finite dateNowValue state if a speed is invalid.
-        const useFallbackSpeed = !isDateNowChecked;
-        const multiplier = useFallbackSpeed
-          ? (Number.isFinite(selectedFallbackSpeed) ? selectedFallbackSpeed : 1)
-          : (Number.isFinite(selectedSpeed) ? selectedSpeed : 0);
+
+        // True starts at speed 0. False uses the false speed for dateNowValue.
+        const multiplier = Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
         const fallbackMultiplier = Number.isFinite(selectedFallbackSpeed)
           ? selectedFallbackSpeed
-          : (Number.isFinite(multiplier) ? multiplier : 0);
+          : multiplier;
 
         dateNowValue += elapsed * multiplier;
-        fallbackDateNowValue += elapsed * fallbackMultiplier;
 
+        // Recovery/fallback for false uses the same dateNowValue clock.
         if (!Number.isFinite(dateNowValue)) {
-          dateNowValue = Number.isFinite(fallbackDateNowValue)
-            ? fallbackDateNowValue
-            : originalValue;
+          dateNowValue = originalValue;
         }
-        if (!Number.isFinite(fallbackDateNowValue)) {
-          fallbackDateNowValue = Number.isFinite(dateNowValue)
-            ? dateNowValue
-            : originalValue;
+        if (!Number.isFinite(fallbackMultiplier)) {
+          dateNowValue = Number.isFinite(dateNowValue) ? dateNowValue : originalValue;
         }
-      } else {
-        dateNowValue = originalValue;
-        fallbackDateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
-      // Checked=true starts frozen at speed 0; checked=false returns the fallback clock.
-      return Math.floor(speedConfig.cbDateNowChecked ? dateNowValue : fallbackDateNowValue);
+      return Math.floor(dateNowValue);
     };
   })();
 
