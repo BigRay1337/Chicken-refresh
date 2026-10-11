@@ -17,7 +17,9 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
+  // Date.now speed when its checkbox is disabled (false).
   const DATE_NOW_ZERO_SPEED_FALLBACK = "0";
+  // Additional fallback speed if the primary fallback is changed or unavailable.
   const DATE_NOW_ADDITIONAL_SPEED_FALLBACK = "0";
   const DATE_NOW_ADDITIONAL_SPEED = "0";
   let pageInitializing = true;
