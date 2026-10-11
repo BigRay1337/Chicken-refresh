@@ -161,18 +161,21 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
+        // When Date.now is unchecked and speed is 0, keep dateNowValue advancing
+        // using the configured fallback multiplier instead of freezing at zero speed.
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK
+            ? Number(DATE_NOW_ZERO_SPEED_FALLBACK)
             : 0.370;
+
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(0 + dateNowValue);
+      return Math.floor(dateNowValue);
     };
   })();
 
