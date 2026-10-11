@@ -19,6 +19,7 @@ function pageScript() {
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_ZERO_SPEED_FALLBACK = "0";
   const DATE_NOW_ADDITIONAL_SPEED_FALLBACK = "0";
+  const DATE_NOW_ADDITIONAL_SPEED = "0";
   let pageInitializing = true;
 
   let timers = [];
@@ -169,11 +170,11 @@ function pageScript() {
         } else if (DATE_NOW_ZERO_SPEED_FALLBACK === "dateNowValue") {
           multiplier = dateNowValue;
         } else if (DATE_NOW_ZERO_SPEED_FALLBACK === "0") {
-          multiplier = 0;
+          multiplier = Number(DATE_NOW_ZERO_SPEED_FALLBACK);
         } else if (DATE_NOW_ADDITIONAL_SPEED_FALLBACK === "dateNowValue") {
           multiplier = dateNowValue;
         } else {
-          multiplier = 0;
+          multiplier = Number(DATE_NOW_ADDITIONAL_SPEED || "0");
         }
 
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
@@ -182,7 +183,7 @@ function pageScript() {
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(0 + dateNowValue);
+      return Math.floor(dateNowValue);
     };
   })();
 
