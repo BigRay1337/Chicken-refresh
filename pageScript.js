@@ -18,6 +18,7 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_TRUE_SPEED = 0;
+  const DATE_NOW_FALSE_SPEED = 0.371;
   let pageInitializing = true;
 
   let timers = [];
@@ -147,7 +148,8 @@ function pageScript() {
   })();
 
   // Date.now: checked=true freezes dateNowValue at speed 0.
-  // checked=false advances the same dateNowValue clock using elapsed real time.
+  // checked=false advances dateNowValue at speed 0.371.
+  // If the calculated value becomes invalid, fall back to the current dateNowValue source.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -162,7 +164,9 @@ function pageScript() {
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
-        const selectedSpeed = isDateNowChecked ? DATE_NOW_TRUE_SPEED : 1;
+        const selectedSpeed = isDateNowChecked
+          ? DATE_NOW_TRUE_SPEED
+          : DATE_NOW_FALSE_SPEED;
         const multiplier = Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
 
         dateNowValue += elapsed * multiplier;
