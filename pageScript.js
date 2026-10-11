@@ -209,7 +209,8 @@ function pageScript() {
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(dateNowValue);
+      // Checked=true starts frozen at speed 0; checked=false returns the fallback clock.
+      return Math.floor(speedConfig.cbDateNowChecked ? dateNowValue : fallbackDateNowValue);
     };
   })();
 
