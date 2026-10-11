@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.370";
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.37";
   let pageInitializing = true;
 
   let timers = [];
