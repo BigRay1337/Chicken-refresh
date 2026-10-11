@@ -153,6 +153,7 @@ function pageScript() {
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
+    let lastValidDateNowValue = null;
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -161,17 +162,23 @@ function pageScript() {
         dateNowValue = originalValue;
       }
 
+      if (lastValidDateNowValue === null || Number.isFinite(dateNowValue)) {
+        lastValidDateNowValue = dateNowValue;
+      }
+
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
         const selectedSpeed = isDateNowChecked
-          ? DATE_NOW_TRUE_SPEED
-          : DATE_NOW_FALSE_SPEED;
+          ? 0
+          : 0.371;
 
         dateNowValue += elapsed * selectedSpeed;
 
         if (!Number.isFinite(dateNowValue)) {
-          dateNowValue = originalValue;
+          dateNowValue = lastValidDateNowValue;
+        } else {
+          lastValidDateNowValue = dateNowValue;
         }
       }
 
