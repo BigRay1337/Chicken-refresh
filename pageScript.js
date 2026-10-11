@@ -165,15 +165,17 @@ function pageScript() {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : DATE_NOW_DISABLED_SPEED;
-        // If the fallback selector is "dateNowValue", use the current Date.now
-        // accumulator directly as the additional fallback multiplier.
+        // Use dateNowValue directly only as the additional fallback if the
+        // selected multiplier is not a finite number.
         const fallbackMultiplier =
           DATE_NOW_ZERO_SPEED_FALLBACK === "dateNowValue"
             ? dateNowValue
             : DATE_NOW_DISABLED_SPEED;
+        const effectiveMultiplier = Number.isFinite(multiplier)
+          ? multiplier
+          : fallbackMultiplier;
         dateNowValue +=
-          (originalValue - previousDateNowValue) *
-          (speedConfig.cbDateNowChecked ? multiplier : DATE_NOW_DISABLED_SPEED);
+          (originalValue - previousDateNowValue) * effectiveMultiplier;
       } else {
         dateNowValue = originalValue;
       }
