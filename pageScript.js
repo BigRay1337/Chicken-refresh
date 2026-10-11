@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.00000000001";
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.000000001";
   const DATE_NOW_DISABLED_SPEED = 0;
   let pageInitializing = true;
 
@@ -165,8 +165,7 @@ function pageScript() {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : DATE_NOW_DISABLED_SPEED;
-        // Use dateNowValue directly only as the additional fallback if the
-        // selected multiplier is not a finite number.
+        // Use the configured fallback only if the selected multiplier is not finite.
         const fallbackMultiplier = Number(DATE_NOW_ZERO_SPEED_FALLBACK);
         const effectiveMultiplier = Number.isFinite(multiplier)
           ? multiplier
