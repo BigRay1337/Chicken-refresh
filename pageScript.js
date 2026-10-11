@@ -146,13 +146,13 @@ function pageScript() {
   })();
 
   // Date.now: checked=true freezes time; checked=false uses dateNowValue,
-  // with 0.36 as the additional fallback speed if the value becomes invalid.
+  // with 0.3 as the additional fallback speed if the value becomes invalid.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
     let lastValidDateNowValue = null;
     const FALLBACK_DATE_NOW_SPEED = "dateNowValue";
-    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.36;
+    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.3;
 
     Date.now = () => {
       const originalValue = originalDateNow();
