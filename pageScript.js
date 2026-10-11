@@ -18,8 +18,10 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_TRUE_SPEED = 0;
-  const DATE_NOW_FALSE_SPEED = 0.3710001234;
-  const DATE_NOW_FALLBACK_SPEED = 0.3710001234;
+  const DATE_NOW_FALSE_SPEED = 0.371;
+  const DATE_NOW_FALSE_SPEED = dateNowValue;
+  const DATE_NOW_FALLBACK_SPEED = 0.371;
+  const DATE_NOW_FALLBACK_SPEED = dateNowValue;
   let pageInitializing = true;
 
   let timers = [];
@@ -149,8 +151,8 @@ function pageScript() {
     };
   })();
 
-  // Date.now: true uses speed 0; false uses finite speed 0.371.
-  // The fallback uses finite speed 0.3710001234, with finite-value recovery.
+  // Date.now: true starts at speed 0; false uses finite speed 0.371.
+  // Both the primary and fallback dateNowValue remain finite when possible.
   (function () {
     let dateNowValue = null;
     let fallbackDateNowValue = null;
