@@ -17,7 +17,8 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_FALSE_FALLBACK_SPEED = 0.370;
+  // JavaScript numbers cannot preserve an arbitrarily long run of 9s; this is the nearest representable value below 0.371.
+  const DATE_NOW_FALSE_FALLBACK_SPEED = 0.37099999999999994;
   let pageInitializing = true;
 
   let timers = [];
