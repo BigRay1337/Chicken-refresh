@@ -145,40 +145,56 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true uses speed 0; checked=false uses fallback speed 0.371.
-  // Keep dateNowValue as the active value and restore the last valid value if calculation fails.
+  // Date.now: checked=true freezes at speed 0; checked=false uses finite fallback speed 0.371.
+  // dateNowValue remains finite; if an update becomes invalid, fall back to the last finite value.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
-    let lastValidDateNowValue = null;
+    let lastFiniteDateNowValue = null;
     const FALLBACK_DATE_NOW_SPEED = 0.371;
+    const CHECKED_DATE_NOW_SPEED = 0;
 
     Date.now = () => {
       const originalValue = originalDateNow();
 
-      if (dateNowValue === null || !Number.isFinite(dateNowValue)) {
-        dateNowValue = originalValue;
+      if (!Number.isFinite(originalValue)) {
+        return Math.floor(
+          Number.isFinite(lastFiniteDateNowValue)
+            ? lastFiniteDateNowValue
+            : 0
+        );
       }
 
-      if (lastValidDateNowValue === null || Number.isFinite(dateNowValue)) {
-        lastValidDateNowValue = dateNowValue;
+      if (!Number.isFinite(dateNowValue)) {
+        dateNowValue = originalValue;
+      }
+      if (!Number.isFinite(lastFiniteDateNowValue)) {
+        lastFiniteDateNowValue = dateNowValue;
       }
 
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
-        const isDateNowChecked = speedConfig.cbDateNowChecked;
-        const selectedSpeed = isDateNowChecked ? 0 : FALLBACK_DATE_NOW_SPEED;
+        const selectedSpeed = speedConfig.cbDateNowChecked
+          ? CHECKED_DATE_NOW_SPEED
+          : FALLBACK_DATE_NOW_SPEED;
+        const nextDateNowValue = dateNowValue + elapsed * selectedSpeed;
 
-        dateNowValue += elapsed * selectedSpeed;
-
-        if (!Number.isFinite(dateNowValue)) {
-          dateNowValue = lastValidDateNowValue;
+        if (Number.isFinite(nextDateNowValue)) {
+          dateNowValue = nextDateNowValue;
+          lastFiniteDateNowValue = nextDateNowValue;
         } else {
-          lastValidDateNowValue = dateNowValue;
+          dateNowValue = lastFiniteDateNowValue;
         }
       }
 
       previousDateNowValue = originalValue;
+
+      if (!Number.isFinite(dateNowValue)) {
+        dateNowValue = Number.isFinite(lastFiniteDateNowValue)
+          ? lastFiniteDateNowValue
+          : originalValue;
+      }
+
       return Math.floor(dateNowValue);
     };
   })();
