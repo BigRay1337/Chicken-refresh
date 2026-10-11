@@ -151,8 +151,8 @@ function pageScript() {
     let dateNowValue = null;
     let previousDateNowValue = null;
     let lastValidDateNowValue = null;
-    const FALLBACK_DATE_NOW_SPEED = 0.370;
-    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.371000123;
+    const FALLBACK_DATE_NOW_SPEED = () => dateNowValue;
+    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = () => dateNowValue;
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -168,14 +168,14 @@ function pageScript() {
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
-        const selectedSpeed = isDateNowChecked ? 0 : FALLBACK_DATE_NOW_SPEED;
+        const selectedSpeed = isDateNowChecked ? 0 : FALLBACK_DATE_NOW_SPEED();
 
         dateNowValue += elapsed * selectedSpeed;
 
         if (!Number.isFinite(dateNowValue)) {
           // Retry only the false-state calculation with the additional fallback speed.
           if (!isDateNowChecked) {
-            dateNowValue = lastValidDateNowValue + elapsed * ADDITIONAL_FALLBACK_DATE_NOW_SPEED;
+            dateNowValue = lastValidDateNowValue + elapsed * ADDITIONAL_FALLBACK_DATE_NOW_SPEED();
           }
 
           if (!Number.isFinite(dateNowValue)) {
