@@ -18,9 +18,6 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_TRUE_SPEED = 0;
-  const DATE_NOW_FALSE_SPEED = 0.3710001234;
-  const DATE_NOW_TRUE_FALLBACK_SPEED = 0;
-  const DATE_NOW_FALSE_FALLBACK_SPEED = 0.3710001234;
   let pageInitializing = true;
 
   let timers = [];
@@ -149,8 +146,8 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true freezes dateNowValue at speed 0; checked=false advances dateNowValue at false speed.
-  // The fallback also uses dateNowValue, avoiding a separate clock with different progression.
+  // Date.now: checked=true freezes dateNowValue at speed 0.
+  // checked=false advances the same dateNowValue clock using elapsed real time.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -165,27 +162,13 @@ function pageScript() {
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
-        const selectedSpeed = isDateNowChecked
-          ? DATE_NOW_TRUE_SPEED
-          : DATE_NOW_FALSE_SPEED;
-        const selectedFallbackSpeed = isDateNowChecked
-          ? DATE_NOW_TRUE_FALLBACK_SPEED
-          : DATE_NOW_FALSE_FALLBACK_SPEED;
-
-        // True starts at speed 0. False uses the false speed for dateNowValue.
+        const selectedSpeed = isDateNowChecked ? DATE_NOW_TRUE_SPEED : 1;
         const multiplier = Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
-        const fallbackMultiplier = Number.isFinite(selectedFallbackSpeed)
-          ? selectedFallbackSpeed
-          : multiplier;
 
         dateNowValue += elapsed * multiplier;
 
-        // Recovery/fallback for false uses the same dateNowValue clock.
         if (!Number.isFinite(dateNowValue)) {
           dateNowValue = originalValue;
-        }
-        if (!Number.isFinite(fallbackMultiplier)) {
-          dateNowValue = Number.isFinite(dateNowValue) ? dateNowValue : originalValue;
         }
       }
 
