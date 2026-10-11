@@ -17,11 +17,10 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  // Date.now speed when its checkbox is disabled (false).
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "0";
-  // Additional fallback speed if the primary fallback is changed or unavailable.
-  const DATE_NOW_ADDITIONAL_SPEED_FALLBACK = "0";
-  const DATE_NOW_ADDITIONAL_SPEED = "0";
+  // Date.now fallback settings when the Date.now checkbox is disabled.
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "";
+  const DATE_NOW_ADDITIONAL_SPEED_FALLBACK = "dateNowValue";
+  const DATE_NOW_ADDITIONAL_SPEED = "";
   let pageInitializing = true;
 
   let timers = [];
@@ -171,9 +170,10 @@ function pageScript() {
           multiplier = speedConfig.speed;
         } else if (DATE_NOW_ZERO_SPEED_FALLBACK === "dateNowValue") {
           multiplier = dateNowValue;
-        } else if (DATE_NOW_ZERO_SPEED_FALLBACK === "0") {
+        } else if (DATE_NOW_ZERO_SPEED_FALLBACK !== "") {
           multiplier = Number(DATE_NOW_ZERO_SPEED_FALLBACK);
         } else if (DATE_NOW_ADDITIONAL_SPEED_FALLBACK === "dateNowValue") {
+          // Use the current Date.now value as the multiplier while disabled.
           multiplier = dateNowValue;
         } else {
           multiplier = Number(DATE_NOW_ADDITIONAL_SPEED || "0");
