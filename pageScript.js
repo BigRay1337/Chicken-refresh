@@ -147,9 +147,9 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true freezes dateNowValue at speed 0.
-  // checked=false advances dateNowValue at speed 0.371.
-  // Keep the current dateNowValue as the fallback if a calculation becomes invalid.
+  // Date.now: checked=true uses speed 0; checked=false uses speed 0.371.
+  // If an update becomes invalid, preserve the current dateNowValue rather than
+  // substituting a separate hard-coded timestamp or a different speed value.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -170,15 +170,20 @@ function pageScript() {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
         const selectedSpeed = isDateNowChecked
-          ? 0
-          : 0.371;
+          ? DATE_NOW_TRUE_SPEED
+          : DATE_NOW_FALSE_SPEED;
+        const previousDateNowValueForFallback = dateNowValue;
+        const nextDateNowValue = dateNowValue + elapsed * selectedSpeed;
 
-        dateNowValue += elapsed * selectedSpeed;
-
-        if (!Number.isFinite(dateNowValue)) {
-          dateNowValue = lastValidDateNowValue;
-        } else {
+        if (Number.isFinite(nextDateNowValue)) {
+          dateNowValue = nextDateNowValue;
           lastValidDateNowValue = dateNowValue;
+        } else {
+          // Primary fallback is the current dateNowValue; use the last known
+          // valid value only if the current value itself is invalid.
+          dateNowValue = Number.isFinite(previousDateNowValueForFallback)
+            ? previousDateNowValueForFallback
+            : lastValidDateNowValue;
         }
       }
 
