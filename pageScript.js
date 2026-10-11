@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_TRUE_SPEED = 0;
+  const DATE_NOW_TRUE_SPEED = 0.371;
   const DATE_NOW_FALSE_SPEED = 0.371;
   const DATE_NOW_TRUE_FALLBACK_SPEED = 0;
   const DATE_NOW_FALSE_FALLBACK_SPEED = 0.371;
@@ -150,8 +150,8 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true uses speed 0; checked=false uses finite speed 0.371.
-  // The false-state fallback also uses 0.371, and invalid values recover from finite dateNowValue state.
+  // Date.now: checked=true uses speed 0.371 with fallback spoof speed 0; checked=false uses 0.371 for both dateNowValue and fallbackDateNowValue.
+  // Invalid values recover from finite dateNowValue state.
   (function () {
     let dateNowValue = null;
     let fallbackDateNowValue = null;
