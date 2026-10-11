@@ -151,7 +151,7 @@ function pageScript() {
     };
   })();
 
-  // Date.now: fallback multipliers use dateNowValue directly.
+  // Date.now fallback multipliers use dateNowValue directly.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -160,10 +160,9 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const multiplier = speedConfig.cbDateNowChecked
-          ? speedConfig.speed
-          : speedConfig.speed === 0
-            ? dateNowValue
+        const multiplier =
+          speedConfig.cbDateNowChecked && speedConfig.speed !== 0
+            ? speedConfig.speed
             : dateNowValue;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
