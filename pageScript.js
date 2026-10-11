@@ -18,10 +18,9 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_TRUE_SPEED = 0;
-  const DATE_NOW_FALSE_SPEED = 0.371;
-  const DATE_NOW_FALSE_SPEED = dateNowValue;
-  const DATE_NOW_FALLBACK_SPEED = 0.371;
-  const DATE_NOW_FALLBACK_SPEED = dateNowValue;
+  const DATE_NOW_FALSE_SPEED = 0.3710001234;
+  const DATE_NOW_TRUE_FALLBACK_SPEED = 0;
+  const DATE_NOW_FALSE_FALLBACK_SPEED = 0.3710001234;
   let pageInitializing = true;
 
   let timers = [];
@@ -151,8 +150,7 @@ function pageScript() {
     };
   })();
 
-  // Date.now: true starts at speed 0; false uses finite speed 0.371.
-  // Both the primary and fallback dateNowValue remain finite when possible.
+  // Date.now uses separate true/false speeds and matching finite fallbacks.
   (function () {
     let dateNowValue = null;
     let fallbackDateNowValue = null;
@@ -174,22 +172,22 @@ function pageScript() {
 
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
-        const falseSpeed = Number.isFinite(DATE_NOW_FALSE_SPEED)
-          ? DATE_NOW_FALSE_SPEED
-          : DATE_NOW_FALLBACK_SPEED;
-        const fallbackSpeed = Number.isFinite(DATE_NOW_FALLBACK_SPEED)
-          ? DATE_NOW_FALLBACK_SPEED
-          : 0.371;
-        const multiplier = speedConfig.cbDateNowChecked
+        const isDateNowChecked = speedConfig.cbDateNowChecked;
+        const selectedSpeed = isDateNowChecked
           ? DATE_NOW_TRUE_SPEED
-          : (Number.isFinite(falseSpeed) ? falseSpeed : fallbackSpeed);
+          : DATE_NOW_FALSE_SPEED;
+        const selectedFallbackSpeed = isDateNowChecked
+          ? DATE_NOW_TRUE_FALLBACK_SPEED
+          : DATE_NOW_FALSE_FALLBACK_SPEED;
+        const multiplier = Number.isFinite(selectedSpeed)
+          ? selectedSpeed
+          : (Number.isFinite(selectedFallbackSpeed) ? selectedFallbackSpeed : 0);
+        const fallbackMultiplier = Number.isFinite(selectedFallbackSpeed)
+          ? selectedFallbackSpeed
+          : (Number.isFinite(multiplier) ? multiplier : 0);
 
         dateNowValue += elapsed * multiplier;
-        fallbackDateNowValue += elapsed * (
-          speedConfig.cbDateNowChecked
-            ? DATE_NOW_TRUE_SPEED
-            : (Number.isFinite(fallbackSpeed) ? fallbackSpeed : 0.371)
-        );
+        fallbackDateNowValue += elapsed * fallbackMultiplier;
 
         if (!Number.isFinite(dateNowValue)) {
           dateNowValue = Number.isFinite(fallbackDateNowValue)
