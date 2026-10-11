@@ -165,7 +165,8 @@ function pageScript() {
           ? speedConfig.speed
           : DATE_NOW_ZERO_SPEED_FALLBACK === "dateNowValue"
             ? dateNowValue
-            : speedConfig.speed;
+            : 0;
+
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
