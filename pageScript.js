@@ -17,6 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.371000;
   let pageInitializing = true;
 
   let timers = [];
@@ -50,6 +51,7 @@ function pageScript() {
     timers = newTimers;
   };
 
+  // Do not reload or refresh the page when settings change.
   originalSetTimeout(() => {
     pageInitializing = false;
     reloadTimers();
@@ -67,7 +69,12 @@ function pageScript() {
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
 
-    previousDateNowChecked = speedConfig.cbDateNowChecked;
+    if (previousDateNowChecked === null) {
+      previousDateNowChecked = speedConfig.cbDateNowChecked;
+    } else {
+      previousDateNowChecked = speedConfig.cbDateNowChecked;
+    }
+
     reloadTimers();
   });
 
@@ -145,51 +152,27 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true uses speed 0; checked=false uses dateNowValue
-  // with a primary fallback speed and an additional fallback if calculation fails.
+  // Date.now
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
-    let lastValidDateNowValue = null;
-    const FALLBACK_DATE_NOW_SPEED = 0.371000;
-    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.371;
 
     Date.now = () => {
       const originalValue = originalDateNow();
 
-      if (dateNowValue === null || !Number.isFinite(dateNowValue)) {
+      if (dateNowValue !== null) {
+        const multiplier = speedConfig.cbDateNowChecked
+          ? speedConfig.speed
+          : speedConfig.speed === 0
+            ? DATE_NOW_ZERO_SPEED_FALLBACK
+            : 0.371000;
+        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
+      } else {
         dateNowValue = originalValue;
       }
 
-      if (lastValidDateNowValue === null || Number.isFinite(dateNowValue)) {
-        lastValidDateNowValue = dateNowValue;
-      }
-
-      if (previousDateNowValue !== null) {
-        const elapsed = originalValue - previousDateNowValue;
-        const isDateNowChecked = speedConfig.cbDateNowChecked;
-        const selectedSpeed = isDateNowChecked ? 0 : FALLBACK_DATE_NOW_SPEED;
-
-        dateNowValue += elapsed * selectedSpeed;
-
-        if (!Number.isFinite(dateNowValue)) {
-          // Retry only the false-state calculation with the additional fallback speed.
-          if (!isDateNowChecked) {
-            dateNowValue = lastValidDateNowValue + elapsed * ADDITIONAL_FALLBACK_DATE_NOW_SPEED;
-          }
-
-          if (!Number.isFinite(dateNowValue)) {
-            dateNowValue = lastValidDateNowValue;
-          }
-        }
-
-        if (Number.isFinite(dateNowValue)) {
-          lastValidDateNowValue = dateNowValue;
-        }
-      }
-
       previousDateNowValue = originalValue;
-      return Math.floor(dateNowValue);
+      return Math.floor(0 + dateNowValue);
     };
   })();
 
