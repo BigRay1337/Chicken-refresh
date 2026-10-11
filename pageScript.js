@@ -18,7 +18,7 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   // Numeric fallback used when the Date.now speed field is blank or disabled.
-  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.370;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.37;
   let pageInitializing = true;
 
   let timers = [];
@@ -162,8 +162,7 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // An unchecked Date.now control or a zero/blank speed uses the separate
-        // numeric fallback. The speed field itself remains independent of it.
+        // An unchecked Date.now control or a zero/blank speed uses the numeric fallback.
         const configuredMultiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : 0;
