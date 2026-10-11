@@ -17,8 +17,8 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.37";
-  const DATE_NOW_DISABLED_SPEED = 0;
+  // Numeric fallback used when the Date.now speed field is blank or disabled.
+  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.370;
   let pageInitializing = true;
 
   let timers = [];
@@ -162,14 +162,16 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const multiplier = speedConfig.cbDateNowChecked
+        // An unchecked Date.now control or a zero/blank speed uses the separate
+        // numeric fallback. The speed field itself remains independent of it.
+        const configuredMultiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : DATE_NOW_DISABLED_SPEED;
-        // Use the configured fallback only if the selected multiplier is not finite.
-        const fallbackMultiplier = Number(DATE_NOW_ZERO_SPEED_FALLBACK);
-        const effectiveMultiplier = Number.isFinite(multiplier)
-          ? multiplier
-          : fallbackMultiplier;
+          : 0;
+        const effectiveMultiplier =
+          configuredMultiplier === 0 || !Number.isFinite(configuredMultiplier)
+            ? DATE_NOW_ZERO_SPEED_FALLBACK
+            : configuredMultiplier;
+
         dateNowValue +=
           (originalValue - previousDateNowValue) * effectiveMultiplier;
       } else {
@@ -177,7 +179,7 @@ function pageScript() {
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(0 + dateNowValue);
+      return Math.floor(dateNowValue);
     };
   })();
 
