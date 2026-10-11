@@ -152,7 +152,7 @@ function pageScript() {
     let previousDateNowValue = null;
     let lastValidDateNowValue = null;
     const FALLBACK_DATE_NOW_SPEED = 0.371000;
-    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.371000123;
+    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.371;
 
     Date.now = () => {
       const originalValue = originalDateNow();
