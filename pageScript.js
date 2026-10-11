@@ -18,7 +18,7 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   // Used only while Date.now is disabled; JavaScript numbers represent 0.370 exactly as 0.37.
-  const DATE_NOW_FALSE_FALLBACK_SPEED = 0.370;
+  const DATE_NOW_FALSE_FALLBACK_SPEED = 0.372;
   let pageInitializing = true;
 
   let timers = [];
@@ -163,7 +163,7 @@ function pageScript() {
 
       if (dateNowValue !== null) {
         // When enabled, use the configured speed, which starts at 0.
-        // When disabled, keep progressing dateNowValue using the 0.370 fallback.
+        // When disabled, keep progressing dateNowValue using the 0.372 fallback.
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : (speedConfig.speed || DATE_NOW_FALSE_FALLBACK_SPEED);
