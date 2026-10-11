@@ -17,8 +17,8 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
-  const DATE_NOW_DISABLED_SPEED = 0.370;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001";
+  const DATE_NOW_DISABLED_SPEED = 0;
   let pageInitializing = true;
 
   let timers = [];
@@ -167,10 +167,7 @@ function pageScript() {
           : DATE_NOW_DISABLED_SPEED;
         // Use dateNowValue directly only as the additional fallback if the
         // selected multiplier is not a finite number.
-        const fallbackMultiplier =
-          DATE_NOW_ZERO_SPEED_FALLBACK === "dateNowValue"
-            ? dateNowValue
-            : DATE_NOW_DISABLED_SPEED;
+        const fallbackMultiplier = Number(DATE_NOW_ZERO_SPEED_FALLBACK);
         const effectiveMultiplier = Number.isFinite(multiplier)
           ? multiplier
           : fallbackMultiplier;
