@@ -17,10 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  // Date.now fallback settings when the Date.now checkbox is disabled.
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "";
-  const DATE_NOW_ADDITIONAL_SPEED_FALLBACK = "dateNowValue";
-  const DATE_NOW_ADDITIONAL_SPEED = "";
+  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.371000;
   let pageInitializing = true;
 
   let timers = [];
@@ -164,28 +161,18 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        let multiplier;
-
-        if (speedConfig.cbDateNowChecked) {
-          multiplier = speedConfig.speed;
-        } else if (DATE_NOW_ZERO_SPEED_FALLBACK === "dateNowValue") {
-          multiplier = dateNowValue;
-        } else if (DATE_NOW_ZERO_SPEED_FALLBACK !== "") {
-          multiplier = Number(DATE_NOW_ZERO_SPEED_FALLBACK);
-        } else if (DATE_NOW_ADDITIONAL_SPEED_FALLBACK === "dateNowValue") {
-          // Use the current Date.now value as the multiplier while disabled.
-          multiplier = dateNowValue;
-        } else {
-          multiplier = Number(DATE_NOW_ADDITIONAL_SPEED || "0");
-        }
-
+        const multiplier = speedConfig.cbDateNowChecked
+          ? speedConfig.speed
+          : speedConfig.speed === 0
+            ? DATE_NOW_ZERO_SPEED_FALLBACK
+            : 0.371000;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(dateNowValue);
+      return Math.floor(0 + dateNowValue);
     };
   })();
 
