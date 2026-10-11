@@ -17,9 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  // Use the current Date.now value as an additional fallback multiplier
-  // when the Date.now speed control is unchecked or its speed is blank/zero.
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
+  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.371000;
   let pageInitializing = true;
 
   let timers = [];
@@ -163,26 +161,18 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // A blank/zero speed or unchecked Date.now control selects the fallback.
-        const configuredMultiplier = speedConfig.cbDateNowChecked
+        const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : 0;
-        const useFallback =
-          configuredMultiplier === 0 || !Number.isFinite(configuredMultiplier);
-        const effectiveMultiplier = useFallback
-          ? DATE_NOW_ZERO_SPEED_FALLBACK === "dateNowValue"
-            ? dateNowValue
-            : Number(DATE_NOW_ZERO_SPEED_FALLBACK)
-          : configuredMultiplier;
-
-        dateNowValue +=
-          (originalValue - previousDateNowValue) * effectiveMultiplier;
+          : speedConfig.speed === 0
+            ? DATE_NOW_ZERO_SPEED_FALLBACK
+            : 0.371000;
+        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(dateNowValue);
+      return Math.floor(0 + dateNowValue);
     };
   })();
 
