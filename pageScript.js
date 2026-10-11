@@ -145,13 +145,13 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true uses speed 0; checked=false uses the fallback speed 0.67.
-  // Keep the last valid dateNowValue if a calculation becomes invalid.
+  // Date.now: checked=true uses speed 0; checked=false uses fallback speed 0.370.
+  // Keep dateNowValue as the active value and restore the last valid value if calculation fails.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
     let lastValidDateNowValue = null;
-    const FALLBACK_DATE_NOW_SPEED = 0.67;
+    const FALLBACK_DATE_NOW_SPEED = 0.370;
 
     Date.now = () => {
       const originalValue = originalDateNow();
