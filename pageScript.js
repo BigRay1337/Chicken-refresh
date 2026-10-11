@@ -180,9 +180,12 @@ function pageScript() {
         const selectedFallbackSpeed = isDateNowChecked
           ? DATE_NOW_TRUE_FALLBACK_SPEED
           : DATE_NOW_FALSE_FALLBACK_SPEED;
-        const multiplier = Number.isFinite(selectedSpeed)
-          ? selectedSpeed
-          : (Number.isFinite(selectedFallbackSpeed) ? selectedFallbackSpeed : 0);
+        // After page initialization (including after a refresh), use the fallback
+        // speed for the unchecked Date.now state. Checked=true remains at speed 0.
+        const useFallbackSpeed = !pageInitializing && !isDateNowChecked;
+        const multiplier = useFallbackSpeed
+          ? (Number.isFinite(selectedFallbackSpeed) ? selectedFallbackSpeed : 1)
+          : (Number.isFinite(selectedSpeed) ? selectedSpeed : 0);
         const fallbackMultiplier = Number.isFinite(selectedFallbackSpeed)
           ? selectedFallbackSpeed
           : (Number.isFinite(multiplier) ? multiplier : 0);
