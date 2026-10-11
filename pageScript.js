@@ -145,14 +145,14 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true freezes time; checked=false uses dateNowValue as
-  // the primary fallback speed and 0.37037 as the additional fallback speed.
+  // Date.now: checked=true freezes time; checked=false uses dateNowValue
+  // as the fallback speed, with 0.3701 as the additional fallback speed.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
     let lastValidDateNowValue = null;
-    const FALLBACK_DATE_NOW_SPEED = () => dateNowValue;
-    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.37037;
+    const FALLBACK_DATE_NOW_SPEED = dateNowValue;
+    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.3701;
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -168,7 +168,7 @@ function pageScript() {
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
-        const selectedSpeed = isDateNowChecked ? 0 : FALLBACK_DATE_NOW_SPEED();
+        const selectedSpeed = isDateNowChecked ? 0 : dateNowValue;
 
         dateNowValue += elapsed * selectedSpeed;
 
