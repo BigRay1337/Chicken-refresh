@@ -145,13 +145,14 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true uses speed 0; checked=false uses fallback speed 0.37.
-  // Keep the last valid dateNowValue if a calculation becomes invalid.
+  // Date.now: checked=true starts at speed 0; checked=false uses dateNowValue
+  // with fallback speeds if a calculation becomes invalid.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
     let lastValidDateNowValue = null;
     const FALLBACK_DATE_NOW_SPEED = 0.371000;
+    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.372;
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -172,8 +173,17 @@ function pageScript() {
         dateNowValue += elapsed * selectedSpeed;
 
         if (!Number.isFinite(dateNowValue)) {
-          dateNowValue = lastValidDateNowValue;
-        } else {
+          // Retry the false-state calculation with the additional fallback speed.
+          if (!isDateNowChecked) {
+            dateNowValue = lastValidDateNowValue + elapsed * ADDITIONAL_FALLBACK_DATE_NOW_SPEED;
+          }
+
+          if (!Number.isFinite(dateNowValue)) {
+            dateNowValue = lastValidDateNowValue;
+          }
+        }
+
+        if (Number.isFinite(dateNowValue)) {
           lastValidDateNowValue = dateNowValue;
         }
       }
