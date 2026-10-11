@@ -150,7 +150,8 @@ function pageScript() {
     };
   })();
 
-  // Date.now uses separate true/false speeds and matching finite fallbacks.
+  // Date.now: checked=true uses speed 0; checked=false uses finite speed 0.371.
+  // The false-state fallback also uses 0.371, and invalid values recover from finite dateNowValue state.
   (function () {
     let dateNowValue = null;
     let fallbackDateNowValue = null;
