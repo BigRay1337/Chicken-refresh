@@ -145,13 +145,13 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true freezes dateNowValue at speed 0.
-  // checked=false advances dateNowValue at speed 0.371.
-  // Keep the current dateNowValue as the fallback if a calculation becomes invalid.
+  // Date.now: checked=true uses speed 0; checked=false uses the fallback speed 0.371.
+  // Keep the last valid dateNowValue if a calculation becomes invalid.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
     let lastValidDateNowValue = null;
+    const FALLBACK_DATE_NOW_SPEED = 0.371;
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -167,9 +167,7 @@ function pageScript() {
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
-        const selectedSpeed = isDateNowChecked
-          ? 0
-          : 0.371;
+        const selectedSpeed = isDateNowChecked ? 0 : FALLBACK_DATE_NOW_SPEED;
 
         dateNowValue += elapsed * selectedSpeed;
 
