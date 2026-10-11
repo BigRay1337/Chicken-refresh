@@ -149,7 +149,7 @@ function pageScript() {
 
   // Date.now: checked=true freezes dateNowValue at speed 0.
   // checked=false advances dateNowValue at speed 0.371.
-  // If the calculated value becomes invalid, fall back to the current dateNowValue source.
+  // Keep the current dateNowValue as the fallback if a calculation becomes invalid.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -165,11 +165,10 @@ function pageScript() {
         const elapsed = originalValue - previousDateNowValue;
         const isDateNowChecked = speedConfig.cbDateNowChecked;
         const selectedSpeed = isDateNowChecked
-          ? 0
-          : 0.371 - dateNowValue;
-        const multiplier = Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
+          ? DATE_NOW_TRUE_SPEED
+          : DATE_NOW_FALSE_SPEED;
 
-        dateNowValue += elapsed * multiplier;
+        dateNowValue += elapsed * selectedSpeed;
 
         if (!Number.isFinite(dateNowValue)) {
           dateNowValue = originalValue;
