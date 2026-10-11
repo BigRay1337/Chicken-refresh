@@ -145,56 +145,50 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true freezes at speed 0; checked=false uses finite fallback speed 0.371.
-  // dateNowValue remains finite; if an update becomes invalid, fall back to the last finite value.
+  // Date.now: checked=true uses speed 0; checked=false uses dateNowValue
+  // with a primary fallback speed and an additional fallback if calculation fails.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
-    let lastFiniteDateNowValue = null;
-    const FALLBACK_DATE_NOW_SPEED = 0.371;
-    const CHECKED_DATE_NOW_SPEED = 0;
+    let lastValidDateNowValue = null;
+    const FALLBACK_DATE_NOW_SPEED = 0.371000;
+    const ADDITIONAL_FALLBACK_DATE_NOW_SPEED = 0.371000123;
 
     Date.now = () => {
       const originalValue = originalDateNow();
 
-      if (!Number.isFinite(originalValue)) {
-        return Math.floor(
-          Number.isFinite(lastFiniteDateNowValue)
-            ? lastFiniteDateNowValue
-            : 0
-        );
-      }
-
-      if (!Number.isFinite(dateNowValue)) {
+      if (dateNowValue === null || !Number.isFinite(dateNowValue)) {
         dateNowValue = originalValue;
       }
-      if (!Number.isFinite(lastFiniteDateNowValue)) {
-        lastFiniteDateNowValue = dateNowValue;
+
+      if (lastValidDateNowValue === null || Number.isFinite(dateNowValue)) {
+        lastValidDateNowValue = dateNowValue;
       }
 
       if (previousDateNowValue !== null) {
         const elapsed = originalValue - previousDateNowValue;
-        const selectedSpeed = speedConfig.cbDateNowChecked
-          ? CHECKED_DATE_NOW_SPEED
-          : FALLBACK_DATE_NOW_SPEED;
-        const nextDateNowValue = dateNowValue + elapsed * selectedSpeed;
+        const isDateNowChecked = speedConfig.cbDateNowChecked;
+        const selectedSpeed = isDateNowChecked ? 0 : FALLBACK_DATE_NOW_SPEED;
 
-        if (Number.isFinite(nextDateNowValue)) {
-          dateNowValue = nextDateNowValue;
-          lastFiniteDateNowValue = nextDateNowValue;
-        } else {
-          dateNowValue = lastFiniteDateNowValue;
+        dateNowValue += elapsed * selectedSpeed;
+
+        if (!Number.isFinite(dateNowValue)) {
+          // Retry only the false-state calculation with the additional fallback speed.
+          if (!isDateNowChecked) {
+            dateNowValue = lastValidDateNowValue + elapsed * ADDITIONAL_FALLBACK_DATE_NOW_SPEED;
+          }
+
+          if (!Number.isFinite(dateNowValue)) {
+            dateNowValue = lastValidDateNowValue;
+          }
+        }
+
+        if (Number.isFinite(dateNowValue)) {
+          lastValidDateNowValue = dateNowValue;
         }
       }
 
       previousDateNowValue = originalValue;
-
-      if (!Number.isFinite(dateNowValue)) {
-        dateNowValue = Number.isFinite(lastFiniteDateNowValue)
-          ? lastFiniteDateNowValue
-          : originalValue;
-      }
-
       return Math.floor(dateNowValue);
     };
   })();
