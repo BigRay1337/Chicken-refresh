@@ -150,7 +150,7 @@ function pageScript() {
     };
   })();
 
-  // Date.now: checked=true uses speed 0.371 with fallback spoof speed 0; checked=false uses 0.371 for both dateNowValue and fallbackDateNowValue.
+  // Date.now: checked=true starts dateNowValue at speed 0; checked=false uses the fallback speed for dateNowValue. The fallback clock uses 0.371 in either state.
   // Invalid values recover from finite dateNowValue state.
   (function () {
     let dateNowValue = null;
@@ -176,7 +176,7 @@ function pageScript() {
         const isDateNowChecked = speedConfig.cbDateNowChecked;
         const selectedSpeed = isDateNowChecked
           ? DATE_NOW_TRUE_SPEED
-          : DATE_NOW_FALSE_SPEED;
+          : DATE_NOW_FALSE_FALLBACK_SPEED;
         const selectedFallbackSpeed = isDateNowChecked
           ? DATE_NOW_TRUE_FALLBACK_SPEED
           : DATE_NOW_FALSE_FALLBACK_SPEED;
