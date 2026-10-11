@@ -17,8 +17,6 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.370";
-  const DATE_NOW_DISABLED_SPEED_FALLBACK = "0.370";
   let pageInitializing = true;
 
   let timers = [];
@@ -153,7 +151,7 @@ function pageScript() {
     };
   })();
 
-  // Date.now: fallback speed applies only to dateNowValue.
+  // Date.now: fallback multipliers use dateNowValue directly.
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
@@ -165,8 +163,8 @@ function pageScript() {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : speedConfig.speed === 0
-            ? Number(DATE_NOW_ZERO_SPEED_FALLBACK)
-            : Number(DATE_NOW_DISABLED_SPEED_FALLBACK);
+            ? dateNowValue
+            : dateNowValue;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
