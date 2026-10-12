@@ -18,7 +18,7 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_ZERO_SPEED_FALLBACK = "0";
-  const DATE_NOW_FALSE_SPEED_FALLBACK = "0.64";
+  const DATE_NOW_FALSE_SPEED_FALLBACK = "0.63";
   let pageInitializing = true;
 
   let timers = [];
@@ -169,8 +169,8 @@ function pageScript() {
             : DATE_NOW_FALSE_SPEED_FALLBACK;
         const parsedMultiplier = Number(configuredMultiplier);
 
-        // Final fallback: use dateNowValue itself as the multiplier only
-        // when the configured multiplier is not a finite number.
+        // Additional fallback: use dateNowValue itself only as the multiplier
+        // if the configured fallback cannot be parsed as a finite number.
         const dateNowValueMultiplier = Number.isFinite(parsedMultiplier)
           ? parsedMultiplier
           : dateNowValue;
