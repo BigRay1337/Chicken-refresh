@@ -17,8 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  // Decimal strings near 0.3 are rounded to the nearest representable JS Number.
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.299999999999999999999999999999";
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "0.30";
   const DATE_NOW_FALSE_SPEED_FALLBACK = "0.31";
   let pageInitializing = true;
 
@@ -169,8 +168,9 @@ function pageScript() {
             ? DATE_NOW_ZERO_SPEED_FALLBACK
             : DATE_NOW_FALSE_SPEED_FALLBACK;
         const parsedMultiplier = Number(configuredMultiplier);
-        // Additional fallback: use dateNowValue itself as the multiplier only
-        // if the configured multiplier cannot be parsed as a finite number.
+
+        // Final fallback: use dateNowValue itself as the multiplier only
+        // when the configured multiplier is not a finite number.
         const dateNowValueMultiplier = Number.isFinite(parsedMultiplier)
           ? parsedMultiplier
           : dateNowValue;
