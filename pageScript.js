@@ -17,8 +17,6 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
-  const DATE_NOW_FALSE_SPEED_FALLBACK = "0.370";
   let pageInitializing = true;
 
   let timers = [];
@@ -70,12 +68,7 @@ function pageScript() {
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
 
-    if (previousDateNowChecked === null) {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    } else {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    }
-
+    previousDateNowChecked = speedConfig.cbDateNowChecked;
     reloadTimers();
   });
 
@@ -158,31 +151,29 @@ function pageScript() {
     let dateNowValue = null;
     let previousDateNowValue = null;
 
+    // Keep the extra fallback as a Number-valued variable only.
+    const DATE_NOW_FALSE_SPEED_FALLBACK = Number(0);
+
     Date.now = () => {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const configuredMultiplier = speedConfig.cbDateNowChecked
-          ? speedConfig.speed
+        // When Date.now is unchecked and speed is zero, use dateNowValue
+        // itself directly as the multiplier. Otherwise use the numeric speed.
+        const dateNowMultiplier = speedConfig.cbDateNowChecked
+          ? Number(speedConfig.speed)
           : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK
+            ? dateNowValue
             : DATE_NOW_FALSE_SPEED_FALLBACK;
-        const parsedMultiplier = Number(configuredMultiplier);
-
-        // Additional fallback: use dateNowValue itself only as the multiplier
-        // if the configured fallback cannot be parsed as a finite number.
-        const dateNowValueMultiplier = Number.isFinite(parsedMultiplier)
-          ? parsedMultiplier
-          : dateNowValue;
 
         dateNowValue +=
-          (originalValue - previousDateNowValue) * dateNowValueMultiplier;
+          (originalValue - previousDateNowValue) * dateNowMultiplier;
       } else {
         dateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(0 + dateNowValue);
+      return Math.floor(dateNowValue);
     };
   })();
 
