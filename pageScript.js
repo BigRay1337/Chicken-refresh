@@ -161,12 +161,11 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const multiplier = speedConfig.cbDateNowChecked
-          ? speedConfig.speed
-          : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK(dateNowValue)
-            : 0;
-        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
+        dateNowValue += (originalValue - previousDateNowValue) * (
+          speedConfig.cbDateNowChecked
+            ? 0
+            : DATE_NOW_ZERO_SPEED_FALLBACK()
+        );
       } else {
         dateNowValue = originalValue;
       }
