@@ -18,7 +18,7 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_ZERO_SPEED_FALLBACK = "-0.371000";
-  const DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK = "+0.01";
+  const DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK = "-0.371000";
   let pageInitializing = true;
 
   let timers = [];
@@ -162,13 +162,15 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        dateNowValue += (originalValue - previousDateNowValue) * (
-          speedConfig.cbDateNowChecked
-            ? 0
-            : 0.371000 +
-              DATE_NOW_ZERO_SPEED_FALLBACK +
-              DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK
+        const fallbackSpeed = Math.max(
+          0,
+          0.371000 +
+            Number(DATE_NOW_ZERO_SPEED_FALLBACK) +
+            Number(DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK)
         );
+        const dateNowSpeed = speedConfig.cbDateNowChecked ? 0 : fallbackSpeed;
+
+        dateNowValue += (originalValue - previousDateNowValue) * dateNowSpeed;
       } else {
         dateNowValue = originalValue;
       }
