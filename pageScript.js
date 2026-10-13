@@ -17,10 +17,10 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "-0.371000";
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "-.371000";
   const DATE_NOW_ADDITIONAL_ZERO_SPEED_FALLBACK = "+0.008";
   const DATE_NOW_SECONDARY_ZERO_SPEED_FALLBACK = "+0";
-  const DATE_NOW_DISABLED_SPEED = Number("");
+  const DATE_NOW_DISABLED_SPEED = Number("0");
   let pageInitializing = true;
 
   let timers = [];
