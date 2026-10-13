@@ -1,7 +1,7 @@
 function pageScript() {
   let speedConfig = {
     speed: 0,
-    cbSetIntervalChecked: true,
+    cbSetIntervalChecked: false,
     cbSetTimeoutChecked: false,
     cbPerformanceNowChecked: false,
     cbDateNowChecked: true,
@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.3710001234;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = (dateNowValue) => 0.3710001234 + dateNowValue;
   let pageInitializing = true;
 
   let timers = [];
@@ -62,11 +62,11 @@ function pageScript() {
 
     speedConfig = {
       speed: Number(e.data.config?.speed) || 0,
-      cbSetIntervalChecked: !!e.data.config?.cbSetIntervalChecked,
-      cbSetTimeoutChecked: !!e.data.config?.cbSetTimeoutChecked,
-      cbPerformanceNowChecked: !!e.data.config?.cbPerformanceNowChecked,
+      cbSetIntervalChecked: false,
+      cbSetTimeoutChecked: false,
+      cbPerformanceNowChecked: false,
       cbDateNowChecked: e.data.config?.cbDateNowChecked !== false,
-      cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
+      cbRequestAnimationFrameChecked: false,
     };
 
     if (previousDateNowChecked === null) {
@@ -164,8 +164,8 @@ function pageScript() {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK
-            : 0.3710001234;
+            ? DATE_NOW_ZERO_SPEED_FALLBACK(dateNowValue)
+            : 0;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
