@@ -154,7 +154,7 @@ function pageScript() {
 
     // Fallback multiplier used while Date.now is disabled at speed zero.
     const DATE_NOW_ZERO_SPEED_FALLBACK = "0.30";
-    const DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK = "0.30999999999";
+    const DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK = "0.30";
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -173,7 +173,8 @@ function pageScript() {
             dateNowMultiplier = Number(DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK);
           }
         } else {
-          dateNowMultiplier = 0;
+          // Disabled Date.now multiplier requested for the swipe-up path.
+          dateNowMultiplier = Number("0.310");
         }
 
         dateNowValue += elapsed * dateNowMultiplier;
