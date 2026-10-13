@@ -1,7 +1,7 @@
 function pageScript() {
   let speedConfig = {
     speed: 0,
-    cbSetIntervalChecked: false,
+    cbSetIntervalChecked: true,
     cbSetTimeoutChecked: false,
     cbPerformanceNowChecked: false,
     cbDateNowChecked: true,
@@ -17,9 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "+0.371000";
-  const DATE_NOW_ADDITIONAL_ZERO_SPEED_FALLBACK = "+0.00791";
-  const DATE_NOW_DISABLED_SPEED = Number("0");
+  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.3710001234;
   let pageInitializing = true;
 
   let timers = [];
@@ -64,11 +62,11 @@ function pageScript() {
 
     speedConfig = {
       speed: Number(e.data.config?.speed) || 0,
-      cbSetIntervalChecked: false,
-      cbSetTimeoutChecked: false,
-      cbPerformanceNowChecked: false,
+      cbSetIntervalChecked: !!e.data.config?.cbSetIntervalChecked,
+      cbSetTimeoutChecked: !!e.data.config?.cbSetTimeoutChecked,
+      cbPerformanceNowChecked: !!e.data.config?.cbPerformanceNowChecked,
       cbDateNowChecked: e.data.config?.cbDateNowChecked !== false,
-      cbRequestAnimationFrameChecked: false,
+      cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
 
     if (previousDateNowChecked === null) {
@@ -163,17 +161,12 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const fallbackSpeed = Math.max(
-          0,
-          0.371000 +
-            Number(DATE_NOW_ZERO_SPEED_FALLBACK) +
-            Number(DATE_NOW_ADDITIONAL_ZERO_SPEED_FALLBACK) +
-        );
-        const dateNowSpeed = speedConfig.cbDateNowChecked
-          ? 0
-          : DATE_NOW_DISABLED_SPEED;
-
-        dateNowValue += (originalValue - previousDateNowValue) * dateNowSpeed;
+        const multiplier = speedConfig.cbDateNowChecked
+          ? speedConfig.speed
+          : speedConfig.speed === 0
+            ? DATE_NOW_ZERO_SPEED_FALLBACK
+            : 0.3710001234;
+        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
       }
