@@ -152,8 +152,9 @@ function pageScript() {
     let previousDateNowValue = null;
     let elapsed = 0;
 
-    // When Date.now is disabled and speed is zero, use elapsed directly as the multiplier.
-    const DATE_NOW_ZERO_SPEED_FALLBACK = "elapsed";
+    // Fallback multiplier used while Date.now is disabled at speed zero.
+    const DATE_NOW_ZERO_SPEED_FALLBACK = "0.30";
+    const DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK = "0.30999999999";
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -164,11 +165,13 @@ function pageScript() {
         let dateNowMultiplier;
         if (speedConfig.cbDateNowChecked) {
           dateNowMultiplier = Number(speedConfig.speed);
-        } else if (
-          speedConfig.speed === 0 &&
-          DATE_NOW_ZERO_SPEED_FALLBACK === "elapsed"
-        ) {
-          dateNowMultiplier = elapsed;
+        } else if (speedConfig.speed === 0) {
+          // Keep the Date.now speed setting at zero when disabled; use the
+          // configured fallback multiplier for the disabled Date.now path.
+          dateNowMultiplier = Number(DATE_NOW_ZERO_SPEED_FALLBACK);
+          if (!Number.isFinite(dateNowMultiplier)) {
+            dateNowMultiplier = Number(DATE_NOW_ZERO_SPEED_ADDITIONAL_FALLBACK);
+          }
         } else {
           dateNowMultiplier = 0;
         }
