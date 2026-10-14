@@ -18,7 +18,7 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
   const DATE_NOW_ZERO_SPEED_FALLBACK = "+0.3710001234";
-  const DATE_NOW_ADDITIONAL_SPEED_FALLBACK = "0.007999999999999999"; // String decimal just below 0.0080
+  const DATE_NOW_ADDITIONAL_SPEED_FALLBACK = "0.007990"; // String decimal fallback
   let pageInitializing = true;
 
   let timers = [];
