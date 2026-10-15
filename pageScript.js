@@ -156,11 +156,12 @@ function pageScript() {
     let dateNowValue = null;
     let previousDateNowValue = null;
 
-    // Each fallback returns the current dateNowValue directly as the multiplier.
+    // Every fallback uses only dateNowValue as its multiplier.
     const DATE_NOW_ZERO_SPEED_FALLBACK = () => dateNowValue;
     const DATE_NOW_DISABLED_SPEED_FALLBACK = () => dateNowValue;
     const DATE_NOW_ADDITIONAL_SPEED_FALLBACK = () => dateNowValue;
     const DATE_NOW_THIRD_SPEED_FALLBACK = () => dateNowValue;
+    const DATE_NOW_FOURTH_SPEED_FALLBACK = () => dateNowValue;
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -176,8 +177,10 @@ function pageScript() {
           multiplier = DATE_NOW_DISABLED_SPEED_FALLBACK();
         } else if (speedConfig.speed < 0) {
           multiplier = DATE_NOW_ADDITIONAL_SPEED_FALLBACK();
-        } else {
+        } else if (previousDateNowChecked === true) {
           multiplier = DATE_NOW_THIRD_SPEED_FALLBACK();
+        } else {
+          multiplier = DATE_NOW_FOURTH_SPEED_FALLBACK();
         }
 
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
