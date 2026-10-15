@@ -165,8 +165,8 @@ function pageScript() {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK
-            : DATE_NOW_ADDITIONAL_FALLBACK_SPEED;
+            ? Number(DATE_NOW_ZERO_SPEED_FALLBACK)
+            : Number(DATE_NOW_ADDITIONAL_FALLBACK_SPEED);
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
