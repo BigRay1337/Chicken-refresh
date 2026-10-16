@@ -17,7 +17,14 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.3710001234;
+
+  // Keep the requested fallback labels as strings. Convert decimal strings
+  // to Number only at the point where a numeric multiplier is required.
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
+  const DATE_NOW_DISABLED_SPEED_FALLBACK = "0.3710001234";
+  const DATE_NOW_ADDITIONAL_ZERO_FALLBACK = "0";
+  const DATE_NOW_STRING_DECIMAL_MULTIPLIER = "0.3710001234";
+
   let pageInitializing = true;
 
   let timers = [];
@@ -69,12 +76,7 @@ function pageScript() {
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
 
-    if (previousDateNowChecked === null) {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    } else {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    }
-
+    previousDateNowChecked = speedConfig.cbDateNowChecked;
     reloadTimers();
   });
 
@@ -161,18 +163,26 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const multiplier = speedConfig.cbDateNowChecked
-          ? speedConfig.speed
-          : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK
-            : 0.3710001234;
+        let multiplier;
+
+        if (speedConfig.cbDateNowChecked) {
+          multiplier = speedConfig.speed;
+        } else if (speedConfig.speed === 0) {
+          // Named fallback is dateNowValue; use the additional zero fallback
+          // as the numeric value so this branch remains a valid multiplier.
+          multiplier = Number(DATE_NOW_ADDITIONAL_ZERO_FALLBACK);
+        } else {
+          // Decimal multiplier is intentionally stored as a string.
+          multiplier = Number(DATE_NOW_STRING_DECIMAL_MULTIPLIER);
+        }
+
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(0 + dateNowValue);
+      return Math.floor(dateNowValue);
     };
   })();
 
