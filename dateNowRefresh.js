@@ -29,7 +29,7 @@
   // Only disable Date.now after the refreshed game document has finished loading.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
-      setDateNowChecked(false);
+      setDateNowChecked(true);
     }, { once: true });
   }
 
@@ -83,6 +83,8 @@
         // If sessionStorage is unavailable, still perform the game refresh.
       }
 
+      // Disable Date.now only during the refresh transition.
+      setDateNowChecked(false);
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
