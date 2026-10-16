@@ -18,11 +18,20 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
 
-  // Keep fallback values as strings; convert only when used as numbers.
+  // Date.now fallback multipliers use the dateNowValue variable only.
   const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
-  const DATE_NOW_DISABLED_SPEED_FALLBACK = "0.3710001234";
-  const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = "+5";
-  const DATE_NOW_STRING_DECIMAL_MULTIPLIER = "0.3710001234";
+  const DATE_NOW_DISABLED_SPEED_FALLBACK = "dateNowValue";
+  const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = "dateNowValue";
+  const DATE_NOW_FALLBACK_1 = "dateNowValue";
+  const DATE_NOW_FALLBACK_2 = "dateNowValue";
+  const DATE_NOW_FALLBACK_3 = "dateNowValue";
+  const DATE_NOW_FALLBACK_4 = "dateNowValue";
+  const DATE_NOW_FALLBACK_5 = "dateNowValue";
+  const DATE_NOW_FALLBACK_6 = "dateNowValue";
+  const DATE_NOW_FALLBACK_7 = "dateNowValue";
+  const DATE_NOW_FALLBACK_8 = "dateNowValue";
+  const DATE_NOW_FALLBACK_9 = "dateNowValue";
+  const DATE_NOW_FALLBACK_10 = "dateNowValue";
 
   let pageInitializing = true;
 
@@ -166,16 +175,25 @@ function pageScript() {
         if (speedConfig.cbDateNowChecked) {
           multiplier = speedConfig.speed;
         } else if (speedConfig.speed === 0) {
-          // Keep the decimal multiplier as a string until numeric use.
-          multiplier = Number(DATE_NOW_STRING_DECIMAL_MULTIPLIER);
+          multiplier = Number(dateNowValue);
         } else {
-          // Additional fallback is the string "+5".
-          multiplier = Number(DATE_NOW_ADDITIONAL_FALLBACK_SPEED);
+          multiplier = Number(dateNowValue);
         }
 
-        // DATE_NOW_ZERO_SPEED_FALLBACK is retained as the requested label.
+        // Keep the requested fallback labels available for configuration.
         void DATE_NOW_ZERO_SPEED_FALLBACK;
         void DATE_NOW_DISABLED_SPEED_FALLBACK;
+        void DATE_NOW_ADDITIONAL_FALLBACK_SPEED;
+        void DATE_NOW_FALLBACK_1;
+        void DATE_NOW_FALLBACK_2;
+        void DATE_NOW_FALLBACK_3;
+        void DATE_NOW_FALLBACK_4;
+        void DATE_NOW_FALLBACK_5;
+        void DATE_NOW_FALLBACK_6;
+        void DATE_NOW_FALLBACK_7;
+        void DATE_NOW_FALLBACK_8;
+        void DATE_NOW_FALLBACK_9;
+        void DATE_NOW_FALLBACK_10;
 
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
