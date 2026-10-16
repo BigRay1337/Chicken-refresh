@@ -7,12 +7,12 @@
   function setDateNowChecked(enabled) {
     cbDateNowChecked = enabled;
 
+    const config = { cbDateNowChecked: enabled };
+    if (!enabled) config.speed = 0.370;
+
     window.postMessage({
       command: "setSpeedConfig",
-      config: {
-        cbDateNowChecked: enabled,
-        speed: enabled ? undefined : 0.370,
-      },
+      config,
     });
   }
 
