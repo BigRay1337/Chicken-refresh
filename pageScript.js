@@ -18,11 +18,10 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
 
-  // Keep the requested fallback labels as strings. Convert decimal strings
-  // to Number only at the point where a numeric multiplier is required.
+  // Keep fallback values as strings; convert only when used as numbers.
   const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
   const DATE_NOW_DISABLED_SPEED_FALLBACK = "0.3710001234";
-  const DATE_NOW_ADDITIONAL_ZERO_FALLBACK = "0";
+  const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = "+5";
   const DATE_NOW_STRING_DECIMAL_MULTIPLIER = "0.3710001234";
 
   let pageInitializing = true;
@@ -58,7 +57,6 @@ function pageScript() {
     timers = newTimers;
   };
 
-  // Do not reload or refresh the page when settings change.
   originalSetTimeout(() => {
     pageInitializing = false;
     reloadTimers();
@@ -168,13 +166,16 @@ function pageScript() {
         if (speedConfig.cbDateNowChecked) {
           multiplier = speedConfig.speed;
         } else if (speedConfig.speed === 0) {
-          // Keep the fallback label as a string; the actual numeric fallback
-          // is the requested decimal string converted at use time.
-          multiplier = Number(DATE_NOW_DISABLED_SPEED_FALLBACK);
+          // Keep the decimal multiplier as a string until numeric use.
+          multiplier = Number(DATE_NOW_STRING_DECIMAL_MULTIPLIER);
         } else {
-          // Additional fallback remains the string "0".
-          multiplier = Number(DATE_NOW_ADDITIONAL_ZERO_FALLBACK);
+          // Additional fallback is the string "+5".
+          multiplier = Number(DATE_NOW_ADDITIONAL_FALLBACK_SPEED);
         }
+
+        // DATE_NOW_ZERO_SPEED_FALLBACK is retained as the requested label.
+        void DATE_NOW_ZERO_SPEED_FALLBACK;
+        void DATE_NOW_DISABLED_SPEED_FALLBACK;
 
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
