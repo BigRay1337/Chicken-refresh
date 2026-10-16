@@ -11,6 +11,7 @@
       command: "setSpeedConfig",
       config: {
         cbDateNowChecked: enabled,
+        speed: enabled ? undefined : 0.370,
       },
     });
   }
