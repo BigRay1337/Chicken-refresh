@@ -201,7 +201,7 @@ function pageScript() {
       }
 
       previousDateNowValue = originalValue;
-      return Math.floor(dateNowValue);
+      return dateNowValue;
     };
   })();
 
