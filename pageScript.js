@@ -18,7 +18,8 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
 
-  // Date.now fallback multipliers use the dateNowValue variable only.
+  // Fractional multiplier used when Date.now is disabled.
+  const dateNowValue = 0;
   const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
   const DATE_NOW_DISABLED_SPEED_FALLBACK = "dateNowValue";
   const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = "dateNowValue";
@@ -163,24 +164,18 @@ function pageScript() {
 
   // Date.now
   (function () {
-    let dateNowValue = null;
+    let adjustedDateNowValue = null;
     let previousDateNowValue = null;
 
     Date.now = () => {
       const originalValue = originalDateNow();
 
-      if (dateNowValue !== null) {
-        let multiplier;
+      if (adjustedDateNowValue !== null) {
+        const multiplier = speedConfig.cbDateNowChecked
+          ? speedConfig.speed
+          : dateNowValue;
 
-        if (speedConfig.cbDateNowChecked) {
-          multiplier = speedConfig.speed;
-        } else if (speedConfig.speed === 0) {
-          multiplier = Number(dateNowValue);
-        } else {
-          multiplier = Number(dateNowValue);
-        }
-
-        // Keep the requested fallback labels available for configuration.
+        // Keep the existing fallback labels available for configuration.
         void DATE_NOW_ZERO_SPEED_FALLBACK;
         void DATE_NOW_DISABLED_SPEED_FALLBACK;
         void DATE_NOW_ADDITIONAL_FALLBACK_SPEED;
@@ -195,13 +190,14 @@ function pageScript() {
         void DATE_NOW_FALLBACK_9;
         void DATE_NOW_FALLBACK_10;
 
-        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
+        adjustedDateNowValue +=
+          (originalValue - previousDateNowValue) * multiplier;
       } else {
-        dateNowValue = originalValue;
+        adjustedDateNowValue = originalValue;
       }
 
       previousDateNowValue = originalValue;
-      return dateNowValue;
+      return adjustedDateNowValue;
     };
   })();
 
