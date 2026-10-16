@@ -19,7 +19,7 @@ function pageScript() {
   const STARTUP_INTERVAL_MS = 1;
 
   // Fractional multiplier used when Date.now is disabled.
-  const dateNowValue = 0;
+  const dateNowValue = 0.3727;
   const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
   const DATE_NOW_DISABLED_SPEED_FALLBACK = "dateNowValue";
   const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = "dateNowValue";
