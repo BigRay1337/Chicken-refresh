@@ -168,12 +168,12 @@ function pageScript() {
         if (speedConfig.cbDateNowChecked) {
           multiplier = speedConfig.speed;
         } else if (speedConfig.speed === 0) {
-          // Named fallback is dateNowValue; use the additional zero fallback
-          // as the numeric value so this branch remains a valid multiplier.
-          multiplier = Number(DATE_NOW_ADDITIONAL_ZERO_FALLBACK);
+          // Keep the fallback label as a string; the actual numeric fallback
+          // is the requested decimal string converted at use time.
+          multiplier = Number(DATE_NOW_DISABLED_SPEED_FALLBACK);
         } else {
-          // Decimal multiplier is intentionally stored as a string.
-          multiplier = Number(DATE_NOW_STRING_DECIMAL_MULTIPLIER);
+          // Additional fallback remains the string "0".
+          multiplier = Number(DATE_NOW_ADDITIONAL_ZERO_FALLBACK);
         }
 
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
