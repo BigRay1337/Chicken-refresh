@@ -1,6 +1,7 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_DELAY_MS = 2431;
+  const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
 
   let cbDateNowChecked = true;
 
@@ -13,6 +14,23 @@
         cbDateNowChecked: enabled,
       },
     });
+  }
+
+  function takePendingRefreshFlag() {
+    try {
+      const pending = window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
+      if (pending) window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
+      return pending;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Only disable Date.now after the refreshed game document has finished loading.
+  if (takePendingRefreshFlag()) {
+    window.addEventListener("load", () => {
+      setDateNowChecked(false);
+    }, { once: true });
   }
 
   window.addEventListener("message", (event) => {
@@ -57,12 +75,14 @@
       return;
     }
 
-    // Wait 1432 ms before the swipe can interact with the extension.
+    // Preserve the existing delay, then refresh first.
     setTimeout(() => {
-      // 1. Disable Date.now.
-      setDateNowChecked(false);
+      try {
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
+      } catch (_) {
+        // If sessionStorage is unavailable, still perform the game refresh.
+      }
 
-      // 2. Refresh the game afterward.
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
