@@ -37,11 +37,12 @@
     }
   }
 
-  // After the refreshed game document loads, turn animation-frame control off.
+  // After the refreshed game document loads, turn animation-frame control off
+  // and leave Date.now disabled after the refresh has completed.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
-      setDateNowChecked(true);
+      setDateNowChecked(false);
     }, { once: true });
   }
 
