@@ -4,16 +4,27 @@
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
 
   let cbDateNowChecked = true;
+  let cbRequestAnimationFrameChecked = false;
 
-  function setDateNowChecked(enabled) {
-    cbDateNowChecked = enabled;
-
+  function setSpeedConfig(changes) {
     window.postMessage({
       command: "setSpeedConfig",
       config: {
-        cbDateNowChecked: enabled,
+        cbDateNowChecked,
+        cbRequestAnimationFrameChecked,
+        ...changes,
       },
     });
+  }
+
+  function setDateNowChecked(enabled) {
+    cbDateNowChecked = enabled;
+    setSpeedConfig({ cbDateNowChecked: enabled });
+  }
+
+  function setAnimationFrameChecked(enabled) {
+    cbRequestAnimationFrameChecked = enabled;
+    setSpeedConfig({ cbRequestAnimationFrameChecked: enabled });
   }
 
   function takePendingRefreshFlag() {
@@ -26,9 +37,10 @@
     }
   }
 
-  // Only disable Date.now after the refreshed game document has finished loading.
+  // After the refreshed game document loads, turn animation-frame control off.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
+      setAnimationFrameChecked(false);
       setDateNowChecked(true);
     }, { once: true });
   }
@@ -36,11 +48,14 @@
   window.addEventListener("message", (event) => {
     if (!event.data) return;
 
-    if (
-      event.data.command === "setSpeedConfig" &&
-      typeof event.data.config?.cbDateNowChecked === "boolean"
-    ) {
-      cbDateNowChecked = event.data.config.cbDateNowChecked;
+    if (event.data.command === "setSpeedConfig") {
+      if (typeof event.data.config?.cbDateNowChecked === "boolean") {
+        cbDateNowChecked = event.data.config.cbDateNowChecked;
+      }
+      if (typeof event.data.config?.cbRequestAnimationFrameChecked === "boolean") {
+        cbRequestAnimationFrameChecked =
+          event.data.config.cbRequestAnimationFrameChecked;
+      }
     }
   });
 
@@ -75,7 +90,10 @@
       return;
     }
 
-    // Preserve the existing delay, then refresh first.
+    // Enable animation-frame control immediately when an upward swipe is detected.
+    setAnimationFrameChecked(true);
+
+    // Keep the existing swipe delay, then refresh the game document.
     setTimeout(() => {
       try {
         window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
@@ -83,7 +101,6 @@
         // If sessionStorage is unavailable, still perform the game refresh.
       }
 
-      // Disable Date.now only during the refresh transition.
       setDateNowChecked(false);
       window.location.reload();
     }, SWIPE_DELAY_MS);
