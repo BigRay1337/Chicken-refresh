@@ -26,8 +26,10 @@
     }
   }
 
-  // Only disable Date.now after the refreshed game document has finished loading.
+  // On the refreshed document, keep Date.now disabled while the game loads,
+  // then restore it once the load event fires.
   if (takePendingRefreshFlag()) {
+    setDateNowChecked(false);
     window.addEventListener("load", () => {
       setDateNowChecked(true);
     }, { once: true });
