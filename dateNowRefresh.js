@@ -31,23 +31,26 @@
       // Continue restoring Date.now even if sessionStorage is unavailable.
     }
 
-    // Apply false as soon as the refreshed document starts, then restore true
-    // at DOMContentLoaded so it is only false during the early part of refresh.
+    // Keep Date.now disabled only through the early part of the refreshed
+    // document startup. Re-enable it on the first animation frame after the
+    // DOM is parsed, rather than leaving it false for the whole page load.
     setDateNowChecked(false);
 
-    if (document.readyState === "loading") {
-      window.addEventListener(
-        "DOMContentLoaded",
-        () => setDateNowChecked(true),
-        { once: true }
-      );
-    } else {
+    const restoreOnFirstFrame = () => {
       requestAnimationFrame(() => setDateNowChecked(true));
+    };
+
+    if (document.readyState === "loading") {
+      window.addEventListener("DOMContentLoaded", restoreOnFirstFrame, {
+        once: true,
+      });
+    } else {
+      restoreOnFirstFrame();
     }
   }
 
   // Run the false -> true transition in the refreshed document, not before
-  // reload. Restore true at DOMContentLoaded rather than waiting for full load.
+  // reload. Restore true as the refreshed document begins rendering.
   if (isRefreshPending()) {
     finishRefreshTransition();
   }
