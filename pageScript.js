@@ -18,8 +18,14 @@ function pageScript() {
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
 
-  // Fractional multiplier used when Date.now is disabled.
-  const dateNowValue = Number("0." + "0".repeat(100) + "9".repeat(100));
+  // Repeat the same digit count for the leading zeros and trailing nines.
+  // Keep this as a finite count: Number("9".repeat(Infinity)) is not valid.
+  const DATE_NOW_DECIMAL_DIGITS = 100;
+  const dateNowValue = Number(
+    "0." +
+    "0".repeat(DATE_NOW_DECIMAL_DIGITS) +
+    "9".repeat(DATE_NOW_DECIMAL_DIGITS)
+  );
   const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
   const DATE_NOW_DISABLED_SPEED_FALLBACK = "dateNowValue";
   const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = "dateNowValue";
@@ -274,10 +280,3 @@ t();
 ;
 
 ;
-
-;
-
-;
-
-;
-
