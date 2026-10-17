@@ -30,14 +30,17 @@
     } catch (_) {
       // Continue restoring Date.now even if sessionStorage is unavailable.
     }
-    setDateNowChecked(true);
+
+    // Only toggle Date.now after the refreshed document has loaded.
+    // Leave it enabled during the refresh itself, then restore it on the next
+    // animation frame so the post-refresh false state can be applied first.
+    setDateNowChecked(false);
+    requestAnimationFrame(() => setDateNowChecked(true));
   }
 
-  // Keep Date.now disabled for the entire refreshed-document load. Do not
-  // clear the flag until load completes, so contentScript cannot re-enable it.
+  // Do not disable Date.now before or during the refresh. Wait until the
+  // refreshed document is complete, then apply the brief false -> true toggle.
   if (isRefreshPending()) {
-    setDateNowChecked(false);
-
     if (document.readyState === "complete") {
       finishRefreshTransition();
     } else {
@@ -95,7 +98,6 @@
         // If sessionStorage is unavailable, still perform the game refresh.
       }
 
-      setDateNowChecked(false);
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
