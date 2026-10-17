@@ -1,6 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_DELAY_MS = 2431;
+  const SWIPE_DELAY_MS = 4321;
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
 
   let cbDateNowChecked = true;
