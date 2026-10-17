@@ -16,23 +16,33 @@
     });
   }
 
-  function takePendingRefreshFlag() {
+  function isRefreshPending() {
     try {
-      const pending = window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
-      if (pending) window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
-      return pending;
+      return window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
     } catch (_) {
       return false;
     }
   }
 
-  // On the refreshed document, keep Date.now disabled while the game loads,
-  // then restore it once the load event fires.
-  if (takePendingRefreshFlag()) {
+  function finishRefreshTransition() {
+    try {
+      window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
+    } catch (_) {
+      // Continue restoring Date.now even if sessionStorage is unavailable.
+    }
+    setDateNowChecked(true);
+  }
+
+  // Keep Date.now disabled for the entire refreshed-document load. Do not
+  // clear the flag until load completes, so contentScript cannot re-enable it.
+  if (isRefreshPending()) {
     setDateNowChecked(false);
-    window.addEventListener("load", () => {
-      setDateNowChecked(true);
-    }, { once: true });
+
+    if (document.readyState === "complete") {
+      finishRefreshTransition();
+    } else {
+      window.addEventListener("load", finishRefreshTransition, { once: true });
+    }
   }
 
   window.addEventListener("message", (event) => {
@@ -85,7 +95,6 @@
         // If sessionStorage is unavailable, still perform the game refresh.
       }
 
-      // Disable Date.now only during the refresh transition.
       setDateNowChecked(false);
       window.location.reload();
     }, SWIPE_DELAY_MS);
