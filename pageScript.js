@@ -75,13 +75,29 @@ function pageScript() {
   window.addEventListener("message", (e) => {
     if (!e.data || e.data.command !== "setSpeedConfig") return;
 
+    const config = e.data.config || {};
+
+    // Messages may update only one setting (for example Date.now). Preserve
+    // every other setting instead of resetting omitted options to defaults.
     speedConfig = {
-      speed: Number(e.data.config?.speed) || 0,
-      cbSetIntervalChecked: !!e.data.config?.cbSetIntervalChecked,
-      cbSetTimeoutChecked: !!e.data.config?.cbSetTimeoutChecked,
-      cbPerformanceNowChecked: !!e.data.config?.cbPerformanceNowChecked,
-      cbDateNowChecked: e.data.config?.cbDateNowChecked !== false,
-      cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
+      speed: config.speed === undefined
+        ? speedConfig.speed
+        : Number(config.speed) || 0,
+      cbSetIntervalChecked: config.cbSetIntervalChecked === undefined
+        ? speedConfig.cbSetIntervalChecked
+        : !!config.cbSetIntervalChecked,
+      cbSetTimeoutChecked: config.cbSetTimeoutChecked === undefined
+        ? speedConfig.cbSetTimeoutChecked
+        : !!config.cbSetTimeoutChecked,
+      cbPerformanceNowChecked: config.cbPerformanceNowChecked === undefined
+        ? speedConfig.cbPerformanceNowChecked
+        : !!config.cbPerformanceNowChecked,
+      cbDateNowChecked: config.cbDateNowChecked === undefined
+        ? speedConfig.cbDateNowChecked
+        : config.cbDateNowChecked !== false,
+      cbRequestAnimationFrameChecked: config.cbRequestAnimationFrameChecked === undefined
+        ? speedConfig.cbRequestAnimationFrameChecked
+        : !!config.cbRequestAnimationFrameChecked,
     };
 
     previousDateNowChecked = speedConfig.cbDateNowChecked;
