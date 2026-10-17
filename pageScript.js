@@ -85,6 +85,13 @@ function pageScript() {
     };
 
     previousDateNowChecked = speedConfig.cbDateNowChecked;
+
+    // If Date.now is switched off, switch it back on immediately.
+    if (!speedConfig.cbDateNowChecked) {
+      speedConfig.cbDateNowChecked = true;
+      previousDateNowChecked = true;
+    }
+
     reloadTimers();
   });
 
