@@ -28,29 +28,15 @@
     try {
       window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
     } catch (_) {
-      // Continue restoring Date.now even if sessionStorage is unavailable.
+      // Continue disabling Date.now even if sessionStorage is unavailable.
     }
 
-    // Keep Date.now disabled only through the early part of the refreshed
-    // document startup. Re-enable it on the first animation frame after the
-    // DOM is parsed, rather than leaving it false for the whole page load.
+    // The swipe phase keeps Date.now enabled; once the refreshed document
+    // starts, switch it off and leave it off until the next qualifying swipe.
     setDateNowChecked(false);
-
-    const restoreOnFirstFrame = () => {
-      requestAnimationFrame(() => setDateNowChecked(true));
-    };
-
-    if (document.readyState === "loading") {
-      window.addEventListener("DOMContentLoaded", restoreOnFirstFrame, {
-        once: true,
-      });
-    } else {
-      restoreOnFirstFrame();
-    }
   }
 
-  // Run the false -> true transition in the refreshed document, not before
-  // reload. Restore true as the refreshed document begins rendering.
+  // Disable Date.now only after the game/page refresh begins.
   if (isRefreshPending()) {
     finishRefreshTransition();
   }
@@ -97,7 +83,10 @@
       return;
     }
 
-    // Preserve the existing delay, then refresh first.
+    // Keep Date.now enabled from the swipe-up animation frame through
+    // the existing swipe delay. The refreshed document disables it afterward.
+    requestAnimationFrame(() => setDateNowChecked(true));
+
     setTimeout(() => {
       try {
         window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
