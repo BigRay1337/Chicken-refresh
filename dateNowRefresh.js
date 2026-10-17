@@ -37,12 +37,10 @@
     }
   }
 
-  // After the refreshed game document loads, turn animation-frame control off,
-  // disable Date.now, then re-enable Date.now 3 ms later.
+  // Restore Date.now only after the refreshed game document has loaded.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
-      setDateNowChecked(false);
       setDateNowChecked(true);
     }, { once: true });
   }
@@ -92,10 +90,11 @@
       return;
     }
 
-    // Enable animation-frame control immediately when an upward swipe is detected.
+    // Enable animation-frame control and turn Date.now off during the
+    // refresh sequence. The refreshed document restores Date.now on load.
     setAnimationFrameChecked(true);
+    setDateNowChecked(false);
 
-    // Keep the existing swipe delay, then refresh the game document.
     setTimeout(() => {
       try {
         window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
