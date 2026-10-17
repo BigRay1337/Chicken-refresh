@@ -37,16 +37,16 @@
     }
   }
 
-  // After the refreshed game document loads, leave Date.now disabled.
+  // Re-enable Date.now as soon as the refreshed game document has loaded.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
-      setDateNowChecked(false);
+      setDateNowChecked(true);
     }, { once: true });
   }
 
-  // Disable Date.now at the transition out of the old game document,
-  // after the game is ending and immediately before the refreshed document.
+  // Disable Date.now only at the transition out of the old game document,
+  // immediately before the refreshed game document replaces it.
   window.addEventListener("pagehide", () => {
     if (window.__chickenRefreshDateNowPending === true) {
       setDateNowChecked(false);
