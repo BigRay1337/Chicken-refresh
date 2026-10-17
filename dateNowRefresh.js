@@ -43,6 +43,8 @@
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
+      // Re-enable Date.now control 1.5 ms after disabling it.
+      setTimeout(() => setDateNowChecked(true), 1.5);
     }, { once: true });
   }
 
