@@ -16,29 +16,21 @@
     });
   }
 
-  function isRefreshPending() {
+  function takePendingRefreshFlag() {
     try {
-      return window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
+      const pending = window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
+      if (pending) window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
+      return pending;
     } catch (_) {
       return false;
     }
   }
 
-  function finishRefreshTransition() {
-    try {
-      window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
-    } catch (_) {
-      // Continue disabling Date.now even if sessionStorage is unavailable.
-    }
-
-    // The swipe phase keeps Date.now enabled; once the refreshed document
-    // starts, switch it off and leave it off until the next qualifying swipe.
-    setDateNowChecked(false);
-  }
-
-  // Disable Date.now only after the game/page refresh begins.
-  if (isRefreshPending()) {
-    finishRefreshTransition();
+  // Only disable Date.now after the refreshed game document has finished loading.
+  if (takePendingRefreshFlag()) {
+    window.addEventListener("load", () => {
+      setDateNowChecked(true);
+    }, { once: true });
   }
 
   window.addEventListener("message", (event) => {
@@ -83,10 +75,7 @@
       return;
     }
 
-    // Keep Date.now enabled from the swipe-up animation frame through
-    // the existing swipe delay. The refreshed document disables it afterward.
-    requestAnimationFrame(() => setDateNowChecked(true));
-
+    // Preserve the existing delay, then refresh first.
     setTimeout(() => {
       try {
         window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
@@ -94,6 +83,8 @@
         // If sessionStorage is unavailable, still perform the game refresh.
       }
 
+      // Disable Date.now only during the refresh transition.
+      setDateNowChecked(false);
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
