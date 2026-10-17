@@ -43,7 +43,7 @@
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
-      setTimeout(() => setDateNowChecked(true), 3);
+      setDateNowChecked(true);
     }, { once: true });
   }
 
@@ -103,7 +103,6 @@
         // If sessionStorage is unavailable, still perform the game refresh.
       }
 
-      setDateNowChecked(false);
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
