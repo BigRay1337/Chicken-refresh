@@ -37,21 +37,14 @@
     }
   }
 
-  // Re-enable Date.now as soon as the refreshed game document has loaded.
+  // After the refreshed game document loads, turn animation-frame control off
+  // and leave Date.now disabled after the refresh has completed.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
-      setDateNowChecked(true);
+      setDateNowChecked(false);
     }, { once: true });
   }
-
-  // Disable Date.now only at the transition out of the old game document,
-  // immediately before the refreshed game document replaces it.
-  window.addEventListener("pagehide", () => {
-    if (window.__chickenRefreshDateNowPending === true) {
-      setDateNowChecked(false);
-    }
-  }, { once: true });
 
   window.addEventListener("message", (event) => {
     if (!event.data) return;
@@ -105,11 +98,11 @@
     setTimeout(() => {
       try {
         window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
-        window.__chickenRefreshDateNowPending = true;
       } catch (_) {
         // If sessionStorage is unavailable, still perform the game refresh.
       }
 
+      setDateNowChecked(false);
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
