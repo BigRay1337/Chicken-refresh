@@ -26,14 +26,10 @@
     }
   }
 
-  // After the game refresh finishes loading, keep Date.now disabled first,
-  // then re-enable it on the next animation frame.
+  // Only disable Date.now after the refreshed game document has finished loading.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
-      setDateNowChecked(false);
-      window.requestAnimationFrame(() => {
-        setDateNowChecked(true);
-      });
+      setDateNowChecked(true);
     }, { once: true });
   }
 
