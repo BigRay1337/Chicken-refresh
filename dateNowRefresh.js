@@ -91,11 +91,14 @@
 
         setAnimationFrameChecked(false);
 
-        // Disable Date.now at the end of the game refresh. The refreshed
-        // document re-enables it after its load/pageshow event.
+        // Disable Date.now 0.5 ms before requesting the website refresh
+        // that finishes this game-refresh sequence. Browser timers are not
+        // guaranteed to fire with sub-millisecond precision.
         setDateNowChecked(false);
-        setRefreshStage("website-refresh-pending");
-        window.postMessage({ command: "chickenRefreshWebsite" });
+        window.setTimeout(() => {
+          setRefreshStage("website-refresh-pending");
+          window.postMessage({ command: "chickenRefreshWebsite" });
+        }, 0.5);
       };
 
       window.requestAnimationFrame(waitForFrames);
