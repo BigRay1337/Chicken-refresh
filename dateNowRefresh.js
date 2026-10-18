@@ -2,7 +2,6 @@
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_DELAY_MS = 4321;
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
-  const REFRESH_TOP_PAGE_COMMAND = "__chickenRefreshTopPage";
 
   let cbDateNowChecked = true;
   let cbRequestAnimationFrameChecked = false;
@@ -28,38 +27,37 @@
     setSpeedConfig({ cbRequestAnimationFrameChecked: enabled });
   }
 
-  function takePendingRefreshFlag() {
+  function getRefreshStage() {
     try {
-      const pending = window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
-      if (pending) window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
-      return pending;
+      return window.sessionStorage.getItem(REFRESH_PENDING_KEY) || "";
     } catch (_) {
-      return false;
+      return "";
     }
   }
 
-  // The top frame handles a request from a refreshed game frame. Using
-  // postMessage avoids trying to access a cross-origin top.location from
-  // inside the game iframe.
-  window.addEventListener("message", (event) => {
-    if (window !== window.top) return;
-    if (event.source === window) return;
-    if (event.data?.command !== REFRESH_TOP_PAGE_COMMAND) return;
+  function setRefreshStage(stage) {
+    try {
+      if (stage) {
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, stage);
+      } else {
+        window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
+      }
+    } catch (_) {
+      // Continue with the game refresh even if sessionStorage is unavailable.
+    }
+  }
 
-    window.location.reload();
-  });
-
-  // After the game document refreshes, restore settings and ask the top frame
-  // to reload the website. The top frame then reinitializes swipe detection.
-  if (takePendingRefreshFlag()) {
+  // After the first game-document refresh, ask the extension worker to
+  // reload the entire tab. This works across cross-origin frames and causes
+  // the swipe detector to be installed again with the website.
+  if (getRefreshStage() === "game-refresh-pending") {
     window.addEventListener("load", () => {
+      setRefreshStage("");
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
-
-      if (window.top !== window) {
-        window.top.postMessage({ command: REFRESH_TOP_PAGE_COMMAND }, "*");
-      }
-      // If this is already the top-level document, its reload was the website refresh.
+      window.setTimeout(() => {
+        window.postMessage({ command: "chickenRefreshWebsite" });
+      }, 100);
     }, { once: true });
   }
 
@@ -111,10 +109,10 @@
     // Enable animation-frame control immediately when an upward swipe is detected.
     setAnimationFrameChecked(true);
 
-    // Keep the existing delay, refresh the game document, then refresh the website.
+    // Keep the existing swipe delay, then refresh the game document.
     setTimeout(() => {
       try {
-        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "game-refresh-pending");
       } catch (_) {
         // If sessionStorage is unavailable, still perform the game refresh.
       }
