@@ -27,23 +27,54 @@
     setSpeedConfig({ cbRequestAnimationFrameChecked: enabled });
   }
 
-  function takePendingRefreshFlag() {
+  function getRefreshStage() {
     try {
-      const pending = window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
-      if (pending) window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
-      return pending;
+      return window.sessionStorage.getItem(REFRESH_PENDING_KEY) || "";
     } catch (_) {
-      return false;
+      return "";
     }
   }
 
-  // After the refreshed game document loads, turn animation-frame control off
-  // and leave Date.now disabled after the refresh has completed.
-  if (takePendingRefreshFlag()) {
-    window.addEventListener("load", () => {
+  function setRefreshStage(stage) {
+    try {
+      if (stage) {
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, stage);
+      } else {
+        window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
+      }
+    } catch (_) {
+      // Continue with the game refresh even if sessionStorage is unavailable.
+    }
+  }
+
+  // After the first game-document refresh, ask the extension worker to
+  // reload the entire tab. This works across cross-origin frames and causes
+  // the swipe detector to be installed again with the website.
+  if (getRefreshStage() === "game-refresh-pending") {
+    let websiteRefreshRequested = false;
+
+    const finishGameRefresh = () => {
+      if (websiteRefreshRequested || getRefreshStage() !== "game-refresh-pending") {
+        return;
+      }
+      websiteRefreshRequested = true;
+
+      // Keep the pending flag until the whole-tab refresh request has been
+      // handed to the isolated content script, then clear it to prevent loops.
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
-    }, { once: true });
+      window.postMessage({ command: "chickenRefreshWebsite" });
+      setRefreshStage("");
+    };
+
+    // pageshow also covers documents restored from the back/forward cache.
+    window.addEventListener("pageshow", finishGameRefresh, { once: true });
+    window.addEventListener("load", finishGameRefresh, { once: true });
+
+    // Covers cases where this script runs after the document has completed.
+    if (document.readyState === "complete") {
+      window.setTimeout(finishGameRefresh, 0);
+    }
   }
 
   window.addEventListener("message", (event) => {
@@ -97,7 +128,7 @@
     // Keep the existing swipe delay, then refresh the game document.
     setTimeout(() => {
       try {
-        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "game-refresh-pending");
       } catch (_) {
         // If sessionStorage is unavailable, still perform the game refresh.
       }
