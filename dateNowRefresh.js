@@ -1,7 +1,6 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_DELAY_MS = 4321;
-  const WEBSITE_REFRESH_FRAME_DELAY = 7;
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
 
   let cbDateNowChecked = true;
@@ -48,27 +47,9 @@
     }
   }
 
-  // If the refresh was requested by the previous document, keep Date.now
-  // disabled while this refreshed document is loading.
-  if (getRefreshStage() === "website-refresh-pending") {
-    setDateNowChecked(false);
-
-    let finished = false;
-    const finishDateNowToggle = () => {
-      if (finished || getRefreshStage() !== "website-refresh-pending") return;
-      finished = true;
-      setDateNowChecked(true);
-      setRefreshStage("");
-    };
-
-    // Re-enable Date.now only once the refreshed document has loaded.
-    window.addEventListener("pageshow", finishDateNowToggle, { once: true });
-    window.addEventListener("load", finishDateNowToggle, { once: true });
-    if (document.readyState === "complete") {
-      window.setTimeout(finishDateNowToggle, 0);
-    }
-  }
-
+  // After the first game-document refresh, ask the extension worker to
+  // reload the entire tab. This works across cross-origin frames and causes
+  // the swipe detector to be installed again with the website.
   if (getRefreshStage() === "game-refresh-pending") {
     let websiteRefreshRequested = false;
 
@@ -78,30 +59,12 @@
       }
       websiteRefreshRequested = true;
 
-      let framesRemaining = WEBSITE_REFRESH_FRAME_DELAY;
-      let dateNowDisabled = false;
-      const waitForFrames = () => {
-
-
-        if (framesRemaining > 0) {
-          framesRemaining -= 1;
-          window.requestAnimationFrame(waitForFrames);
-          return;
-        }
-
-        setAnimationFrameChecked(false);
-
-        // Disable Date.now 0.5 ms before requesting the website refresh
-        // that finishes this game-refresh sequence. Browser timers are not
-        // guaranteed to fire with sub-millisecond precision.
-        setDateNowChecked(false);
-        window.setTimeout(() => {
-          setRefreshStage("website-refresh-pending");
-          window.postMessage({ command: "chickenRefreshWebsite" });
-        }, 0.5);
-      };
-
-      window.requestAnimationFrame(waitForFrames);
+      // Keep the pending flag until the whole-tab refresh request has been
+      // handed to the isolated content script, then clear it to prevent loops.
+      setAnimationFrameChecked(false);
+      setDateNowChecked(false);
+      window.postMessage({ command: "chickenRefreshWebsite" });
+      setRefreshStage("");
     };
 
     // pageshow also covers documents restored from the back/forward cache.
@@ -162,9 +125,15 @@
     // Enable animation-frame control immediately when an upward swipe is detected.
     setAnimationFrameChecked(true);
 
-    // Preserve the existing delay and refresh sequence.
+    // Keep the existing swipe delay, then refresh the game document.
     setTimeout(() => {
-      setRefreshStage("game-refresh-pending");
+      try {
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "game-refresh-pending");
+      } catch (_) {
+        // If sessionStorage is unavailable, still perform the game refresh.
+      }
+
+      setDateNowChecked(false);
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
