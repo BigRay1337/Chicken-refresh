@@ -2,6 +2,7 @@
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_DELAY_MS = 4321;
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
+  const REFRESH_TOP_PAGE_COMMAND = "__chickenRefreshTopPage";
 
   let cbDateNowChecked = true;
   let cbRequestAnimationFrameChecked = false;
@@ -37,25 +38,28 @@
     }
   }
 
-  // After the game document refreshes, restore the settings and reload the
-  // top-level website once, so its swipe detector is initialized for the next swipe.
+  // The top frame handles a request from a refreshed game frame. Using
+  // postMessage avoids trying to access a cross-origin top.location from
+  // inside the game iframe.
+  window.addEventListener("message", (event) => {
+    if (window !== window.top) return;
+    if (event.source === window) return;
+    if (event.data?.command !== REFRESH_TOP_PAGE_COMMAND) return;
+
+    window.location.reload();
+  });
+
+  // After the game document refreshes, restore settings and ask the top frame
+  // to reload the website. The top frame then reinitializes swipe detection.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
 
-      window.setTimeout(() => {
-        try {
-          if (window.top !== window) {
-            window.top.location.reload();
-          } else {
-            // The top-level document is already refreshed; do not reload it again.
-          }
-        } catch (_) {
-          // Cross-origin restrictions may prevent this frame from reloading the
-          // top-level website. The game document refresh still completed.
-        }
-      }, 100);
+      if (window.top !== window) {
+        window.top.postMessage({ command: REFRESH_TOP_PAGE_COMMAND }, "*");
+      }
+      // If this is already the top-level document, its reload was the website refresh.
     }, { once: true });
   }
 
@@ -107,7 +111,7 @@
     // Enable animation-frame control immediately when an upward swipe is detected.
     setAnimationFrameChecked(true);
 
-    // Keep the existing swipe delay, then refresh the game document.
+    // Keep the existing delay, refresh the game document, then refresh the website.
     setTimeout(() => {
       try {
         window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
