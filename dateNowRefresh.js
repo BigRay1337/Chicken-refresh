@@ -27,37 +27,22 @@
     setSpeedConfig({ cbRequestAnimationFrameChecked: enabled });
   }
 
-  function getRefreshStage() {
+  function takePendingRefreshFlag() {
     try {
-      return window.sessionStorage.getItem(REFRESH_PENDING_KEY) || "";
+      const pending = window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
+      if (pending) window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
+      return pending;
     } catch (_) {
-      return "";
+      return false;
     }
   }
 
-  function setRefreshStage(stage) {
-    try {
-      if (stage) {
-        window.sessionStorage.setItem(REFRESH_PENDING_KEY, stage);
-      } else {
-        window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
-      }
-    } catch (_) {
-      // Continue with the game refresh even if sessionStorage is unavailable.
-    }
-  }
-
-  // After the first game-document refresh, ask the extension worker to
-  // reload the entire tab. This works across cross-origin frames and causes
-  // the swipe detector to be installed again with the website.
-  if (getRefreshStage() === "game-refresh-pending") {
+  // After the refreshed game document loads, turn animation-frame control off
+  // and leave Date.now disabled after the refresh has completed.
+  if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
-      setRefreshStage("");
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
-      window.setTimeout(() => {
-        window.postMessage({ command: "chickenRefreshWebsite" });
-      }, 100);
     }, { once: true });
   }
 
@@ -112,7 +97,7 @@
     // Keep the existing swipe delay, then refresh the game document.
     setTimeout(() => {
       try {
-        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "game-refresh-pending");
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
       } catch (_) {
         // If sessionStorage is unavailable, still perform the game refresh.
       }
