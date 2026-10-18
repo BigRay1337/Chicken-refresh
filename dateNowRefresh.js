@@ -37,12 +37,19 @@
     }
   }
 
-  // After the refreshed game document loads, turn animation-frame control off
-  // and leave Date.now disabled after the refresh has completed.
+  // Once the game document has reloaded, restore the existing settings and
+  // then reload the top-level website so the entire page is refreshed too.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
+
+      try {
+        window.top.location.reload();
+      } catch (_) {
+        // If the top-level page cannot be reloaded from this frame, the
+        // game document has still been refreshed.
+      }
     }, { once: true });
   }
 
