@@ -161,13 +161,15 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // Use dateNowValue itself as the additional fallback multiplier.
+        // Keep the zero-speed fallback fixed; use dateNowValue itself as the
+        // additional fallback multiplier (without converting it to a string).
         const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = dateNowValue;
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : speedConfig.speed === 0
             ? DATE_NOW_ZERO_SPEED_FALLBACK
             : DATE_NOW_ADDITIONAL_FALLBACK_SPEED;
+
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
