@@ -1,7 +1,7 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_DELAY_MS = 4321;
-  const DATE_NOW_DISABLE_LEAD_MS = 0.002;
+  const DATE_NOW_DISABLE_LEAD_MS = 0.0001;
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
 
   let cbDateNowChecked = true;
