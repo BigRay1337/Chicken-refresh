@@ -48,15 +48,20 @@
     }
   }
 
-  // Toggle Date.now only after the game refresh has completed and the
-  // follow-up document has loaded.
+  // If the refresh was requested by the previous document, keep Date.now
+  // disabled while this refreshed document is loading.
   if (getRefreshStage() === "website-refresh-pending") {
+    setDateNowChecked(false);
+
+    let finished = false;
     const finishDateNowToggle = () => {
-      if (getRefreshStage() !== "website-refresh-pending") return;
-      setDateNowChecked(false);
+      if (finished || getRefreshStage() !== "website-refresh-pending") return;
+      finished = true;
       setDateNowChecked(true);
       setRefreshStage("");
     };
+
+    // Re-enable Date.now only once the refreshed document has loaded.
     window.addEventListener("pageshow", finishDateNowToggle, { once: true });
     window.addEventListener("load", finishDateNowToggle, { once: true });
     if (document.readyState === "complete") {
@@ -83,8 +88,8 @@
 
         setAnimationFrameChecked(false);
 
-        // Request the game refresh first. Date.now is toggled only after
-        // the refreshed document finishes loading.
+        // Disable Date.now immediately before requesting the game refresh.
+        setDateNowChecked(false);
         setRefreshStage("website-refresh-pending");
         window.postMessage({ command: "chickenRefreshWebsite" });
       };
@@ -150,7 +155,7 @@
     // Enable animation-frame control immediately when an upward swipe is detected.
     setAnimationFrameChecked(true);
 
-    // Preserve the existing delay, then reload the game without toggling Date.now first.
+    // Preserve the existing delay and refresh sequence.
     setTimeout(() => {
       setRefreshStage("game-refresh-pending");
       window.location.reload();
