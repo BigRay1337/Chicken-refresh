@@ -32,19 +32,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 window.addEventListener("message", (e) => {
-  if (!e.data) return;
+  if (!e.data || e.data.command !== "getSpeedConfig") return;
 
-  if (e.data.command === "getSpeedConfig") {
-    window.postMessage({
-      command: "setSpeedConfig",
-      config: speedConfig,
-    });
-    return;
-  }
-
-  // Bridge page-world refresh requests to the extension service worker.
-  // The page-world script cannot call chrome.runtime directly.
-  if (e.data.command === "chickenRefreshWebsite") {
-    chrome.runtime.sendMessage({ command: "chickenRefreshWebsite" });
-  }
+  window.postMessage({
+    command: "setSpeedConfig",
+    config: speedConfig,
+  });
 });

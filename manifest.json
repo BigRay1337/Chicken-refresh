@@ -42,8 +42,5 @@
         "contentScript.js"
       ]
     }
-  ],
-  "permissions": [
-    "tabs"
   ]
 }
