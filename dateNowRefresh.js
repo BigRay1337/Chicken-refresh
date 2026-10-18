@@ -129,7 +129,7 @@
     // Keep the existing swipe delay, then refresh the game document.
     setTimeout(() => {
       try {
-        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "1");
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "game-refresh-pending");
       } catch (_) {
         // If sessionStorage is unavailable, still perform the game refresh.
       }
