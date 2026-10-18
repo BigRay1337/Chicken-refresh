@@ -1,7 +1,12 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_DELAY_MS = 4321;
-  const DATE_NOW_DISABLE_LEAD_MS = Number("0." + "0".repeat(100) + "1");
+  // Cap infinite zero repetition to avoid RangeError from String.repeat(Infinity).
+  function repeatZeros(count) {
+    const safeCount = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 100;
+    return "0".repeat(Math.min(safeCount, 100));
+  }
+  const DATE_NOW_DISABLE_LEAD_MS = Number("0." + repeatZeros(Infinity) + "1");
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
 
   let cbDateNowChecked = true;
