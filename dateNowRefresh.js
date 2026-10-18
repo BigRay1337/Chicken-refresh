@@ -70,7 +70,12 @@
         // Keep the pending flag until the whole-tab refresh request has been
         // handed to the isolated content script, then clear it to prevent loops.
         setAnimationFrameChecked(false);
+
+        // Toggle Date.now off only after the game document has refreshed,
+        // then restore it immediately so the disabled state is not persistent.
         setDateNowChecked(false);
+        setDateNowChecked(true);
+
         window.postMessage({ command: "chickenRefreshWebsite" });
         setRefreshStage("");
       };
