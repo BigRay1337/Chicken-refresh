@@ -79,7 +79,17 @@
       websiteRefreshRequested = true;
 
       let framesRemaining = WEBSITE_REFRESH_FRAME_DELAY;
+      let dateNowDisabled = false;
       const waitForFrames = () => {
+        // Briefly disable Date.now near the middle of the refresh transition.
+        if (
+          !dateNowDisabled &&
+          framesRemaining <= Math.floor(WEBSITE_REFRESH_FRAME_DELAY / 2)
+        ) {
+          setDateNowChecked(false);
+          dateNowDisabled = true;
+        }
+
         if (framesRemaining > 0) {
           framesRemaining -= 1;
           window.requestAnimationFrame(waitForFrames);
@@ -88,8 +98,11 @@
 
         setAnimationFrameChecked(false);
 
-        // Disable Date.now immediately before requesting the game refresh.
-        setDateNowChecked(false);
+        // Re-enable Date.now immediately after the brief in-between toggle,
+        // before requesting the website/game refresh.
+        if (dateNowDisabled) {
+          setDateNowChecked(true);
+        }
         setRefreshStage("website-refresh-pending");
         window.postMessage({ command: "chickenRefreshWebsite" });
       };
