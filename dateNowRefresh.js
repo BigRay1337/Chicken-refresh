@@ -48,8 +48,7 @@
     }
   }
 
-  // After the game document finishes loading, wait seven animation frames
-  // before requesting a whole-tab website refresh.
+  // Only toggle Date.now after the refreshed game document has finished loading.
   if (getRefreshStage() === "game-refresh-pending") {
     let websiteRefreshRequested = false;
 
@@ -67,12 +66,9 @@
           return;
         }
 
-        // Keep the pending flag until the whole-tab refresh request has been
-        // handed to the isolated content script, then clear it to prevent loops.
         setAnimationFrameChecked(false);
 
-        // Toggle Date.now off only after the game document has refreshed,
-        // then restore it immediately so the disabled state is not persistent.
+        // Game refresh has completed: turn Date.now off, then back on.
         setDateNowChecked(false);
         setDateNowChecked(true);
 
@@ -141,15 +137,9 @@
     // Enable animation-frame control immediately when an upward swipe is detected.
     setAnimationFrameChecked(true);
 
-    // Keep the existing swipe delay, then refresh the game document.
+    // Preserve the existing delay, then reload the game without toggling Date.now first.
     setTimeout(() => {
-      try {
-        window.sessionStorage.setItem(REFRESH_PENDING_KEY, "game-refresh-pending");
-      } catch (_) {
-        // If sessionStorage is unavailable, still perform the game refresh.
-      }
-
-      setDateNowChecked(false);
+      setRefreshStage("game-refresh-pending");
       window.location.reload();
     }, SWIPE_DELAY_MS);
   }, { passive: true });
