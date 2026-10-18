@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.370;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.371000;
   let pageInitializing = true;
 
   let timers = [];
@@ -161,15 +161,11 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // Keep the zero-speed fallback fixed; use dateNowValue itself as the
-        // additional fallback multiplier (without converting it to a string).
-        const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = dateNowValue;
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : speedConfig.speed === 0
             ? DATE_NOW_ZERO_SPEED_FALLBACK
-            : DATE_NOW_ADDITIONAL_FALLBACK_SPEED;
-
+            : 0.371000;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
