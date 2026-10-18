@@ -47,33 +47,16 @@
     }
   }
 
-  // Sequence: game refresh -> website refresh -> game refresh.
-  // The swipe listener is installed again on each document load.
-  const refreshStage = getRefreshStage();
-
-  if (refreshStage === "game-refresh-pending") {
+  // After the first game-document refresh, ask the extension worker to
+  // reload the entire tab. This works across cross-origin frames and causes
+  // the swipe detector to be installed again with the website.
+  if (getRefreshStage() === "game-refresh-pending") {
     window.addEventListener("load", () => {
+      setRefreshStage("");
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
-
-      // Persist the next step before refreshing the top-level website.
-      setRefreshStage("second-game-refresh-pending");
       window.setTimeout(() => {
-        try {
-          window.top.location.reload();
-        } catch (_) {
-          // A cross-origin frame may not be allowed to reload its parent.
-        }
-      }, 100);
-    }, { once: true });
-  } else if (refreshStage === "second-game-refresh-pending") {
-    window.addEventListener("load", () => {
-      // The website has reloaded; now refresh the game once more and clear
-      // the stage first so this does not create a reload loop.
-      setRefreshStage("");
-      setDateNowChecked(false);
-      window.setTimeout(() => {
-        window.location.reload();
+        window.postMessage({ command: "chickenRefreshWebsite" });
       }, 100);
     }, { once: true });
   }
