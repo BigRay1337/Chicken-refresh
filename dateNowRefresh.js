@@ -44,12 +44,16 @@
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
 
-      try {
-        window.top.location.reload();
-      } catch (_) {
-        // If the top-level page cannot be reloaded from this frame, the
-        // game document has still been refreshed.
-      }
+      // Let the refreshed game document finish its load handler before
+      // reloading the top-level website.
+      window.setTimeout(() => {
+        try {
+          window.top.location.reload();
+        } catch (_) {
+          // Cross-origin restrictions can prevent a frame from reloading
+          // the top-level page. Keep the game refresh intact in that case.
+        }
+      }, 100);
     }, { once: true });
   }
 
