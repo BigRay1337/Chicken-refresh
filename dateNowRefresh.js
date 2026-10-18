@@ -27,32 +27,53 @@
     setSpeedConfig({ cbRequestAnimationFrameChecked: enabled });
   }
 
-  function takePendingRefreshFlag() {
+  function getRefreshStage() {
     try {
-      const pending = window.sessionStorage.getItem(REFRESH_PENDING_KEY) === "1";
-      if (pending) window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
-      return pending;
+      return window.sessionStorage.getItem(REFRESH_PENDING_KEY) || "";
     } catch (_) {
-      return false;
+      return "";
     }
   }
 
-  // Once the game document has reloaded, restore the existing settings and
-  // then reload the top-level website so the entire page is refreshed too.
-  if (takePendingRefreshFlag()) {
+  function setRefreshStage(stage) {
+    try {
+      if (stage) {
+        window.sessionStorage.setItem(REFRESH_PENDING_KEY, stage);
+      } else {
+        window.sessionStorage.removeItem(REFRESH_PENDING_KEY);
+      }
+    } catch (_) {
+      // Continue with the game refresh even if sessionStorage is unavailable.
+    }
+  }
+
+  // Sequence: game refresh -> website refresh -> game refresh.
+  // The swipe listener is installed again on each document load.
+  const refreshStage = getRefreshStage();
+
+  if (refreshStage === "game-refresh-pending") {
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
 
-      // Let the refreshed game document finish its load handler before
-      // reloading the top-level website.
+      // Persist the next step before refreshing the top-level website.
+      setRefreshStage("second-game-refresh-pending");
       window.setTimeout(() => {
         try {
           window.top.location.reload();
         } catch (_) {
-          // Cross-origin restrictions can prevent a frame from reloading
-          // the top-level page. Keep the game refresh intact in that case.
+          // A cross-origin frame may not be allowed to reload its parent.
         }
+      }, 100);
+    }, { once: true });
+  } else if (refreshStage === "second-game-refresh-pending") {
+    window.addEventListener("load", () => {
+      // The website has reloaded; now refresh the game once more and clear
+      // the stage first so this does not create a reload loop.
+      setRefreshStage("");
+      setDateNowChecked(false);
+      window.setTimeout(() => {
+        window.location.reload();
       }, 100);
     }, { once: true });
   }
