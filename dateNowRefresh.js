@@ -48,7 +48,22 @@
     }
   }
 
-  // Only toggle Date.now after the refreshed game document has finished loading.
+  // Toggle Date.now only after the game refresh has completed and the
+  // follow-up document has loaded.
+  if (getRefreshStage() === "website-refresh-pending") {
+    const finishDateNowToggle = () => {
+      if (getRefreshStage() !== "website-refresh-pending") return;
+      setDateNowChecked(false);
+      setDateNowChecked(true);
+      setRefreshStage("");
+    };
+    window.addEventListener("pageshow", finishDateNowToggle, { once: true });
+    window.addEventListener("load", finishDateNowToggle, { once: true });
+    if (document.readyState === "complete") {
+      window.setTimeout(finishDateNowToggle, 0);
+    }
+  }
+
   if (getRefreshStage() === "game-refresh-pending") {
     let websiteRefreshRequested = false;
 
@@ -68,12 +83,10 @@
 
         setAnimationFrameChecked(false);
 
-        // Game refresh has completed: turn Date.now off, then back on.
-        setDateNowChecked(false);
-        setDateNowChecked(true);
-
+        // Request the game refresh first. Date.now is toggled only after
+        // the refreshed document finishes loading.
+        setRefreshStage("website-refresh-pending");
         window.postMessage({ command: "chickenRefreshWebsite" });
-        setRefreshStage("");
       };
 
       window.requestAnimationFrame(waitForFrames);
