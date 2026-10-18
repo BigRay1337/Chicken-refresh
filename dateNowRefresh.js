@@ -1,6 +1,7 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_DELAY_MS = 4321;
+  const DATE_NOW_DISABLE_LEAD_MS = 0.5;
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
 
   let cbDateNowChecked = true;
@@ -124,6 +125,13 @@
 
     // Enable animation-frame control immediately when an upward swipe is detected.
     setAnimationFrameChecked(true);
+
+    // Disable Date.now 0.5 ms before the game refresh is scheduled to finish.
+    // Sub-millisecond timer precision is browser-dependent, so the callback may run
+    // at the same time as the refresh on some devices.
+    setTimeout(() => {
+      setDateNowChecked(false);
+    }, Math.max(0, SWIPE_DELAY_MS - DATE_NOW_DISABLE_LEAD_MS));
 
     // Keep the existing swipe delay, then refresh the game document.
     setTimeout(() => {
