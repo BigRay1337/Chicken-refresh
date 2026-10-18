@@ -37,12 +37,25 @@
     }
   }
 
-  // After the refreshed game document loads, turn animation-frame control off
-  // and leave Date.now disabled after the refresh has completed.
+  // After the game document refreshes, restore the settings and reload the
+  // top-level website once, so its swipe detector is initialized for the next swipe.
   if (takePendingRefreshFlag()) {
     window.addEventListener("load", () => {
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
+
+      window.setTimeout(() => {
+        try {
+          if (window.top !== window) {
+            window.top.location.reload();
+          } else {
+            // The top-level document is already refreshed; do not reload it again.
+          }
+        } catch (_) {
+          // Cross-origin restrictions may prevent this frame from reloading the
+          // top-level website. The game document refresh still completed.
+        }
+      }, 100);
     }, { once: true });
   }
 
