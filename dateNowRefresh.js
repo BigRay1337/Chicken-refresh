@@ -1,6 +1,7 @@
 (function () {
   const SWIPE_THRESHOLD_PX = 30;
   const SWIPE_DELAY_MS = 4321;
+  const WEBSITE_REFRESH_FRAME_DELAY = 7;
   const REFRESH_PENDING_KEY = "__chickenRefreshDateNowPending";
 
   let cbDateNowChecked = true;
@@ -47,9 +48,8 @@
     }
   }
 
-  // After the first game-document refresh, ask the extension worker to
-  // reload the entire tab. This works across cross-origin frames and causes
-  // the swipe detector to be installed again with the website.
+  // After the game document finishes loading, wait seven animation frames
+  // before requesting a whole-tab website refresh.
   if (getRefreshStage() === "game-refresh-pending") {
     let websiteRefreshRequested = false;
 
@@ -59,12 +59,23 @@
       }
       websiteRefreshRequested = true;
 
-      // Keep the pending flag until the whole-tab refresh request has been
-      // handed to the isolated content script, then clear it to prevent loops.
-      setAnimationFrameChecked(false);
-      setDateNowChecked(false);
-      window.postMessage({ command: "chickenRefreshWebsite" });
-      setRefreshStage("");
+      let framesRemaining = WEBSITE_REFRESH_FRAME_DELAY;
+      const waitForFrames = () => {
+        if (framesRemaining > 0) {
+          framesRemaining -= 1;
+          window.requestAnimationFrame(waitForFrames);
+          return;
+        }
+
+        // Keep the pending flag until the whole-tab refresh request has been
+        // handed to the isolated content script, then clear it to prevent loops.
+        setAnimationFrameChecked(false);
+        setDateNowChecked(false);
+        window.postMessage({ command: "chickenRefreshWebsite" });
+        setRefreshStage("");
+      };
+
+      window.requestAnimationFrame(waitForFrames);
     };
 
     // pageshow also covers documents restored from the back/forward cache.
