@@ -51,14 +51,30 @@
   // reload the entire tab. This works across cross-origin frames and causes
   // the swipe detector to be installed again with the website.
   if (getRefreshStage() === "game-refresh-pending") {
-    window.addEventListener("load", () => {
-      setRefreshStage("");
+    let websiteRefreshRequested = false;
+
+    const finishGameRefresh = () => {
+      if (websiteRefreshRequested || getRefreshStage() !== "game-refresh-pending") {
+        return;
+      }
+      websiteRefreshRequested = true;
+
+      // Keep the pending flag until the whole-tab refresh request has been
+      // handed to the isolated content script, then clear it to prevent loops.
       setAnimationFrameChecked(false);
       setDateNowChecked(false);
-      window.setTimeout(() => {
-        window.postMessage({ command: "chickenRefreshWebsite" });
-      }, 100);
-    }, { once: true });
+      window.postMessage({ command: "chickenRefreshWebsite" });
+      setRefreshStage("");
+    };
+
+    // pageshow also covers documents restored from the back/forward cache.
+    window.addEventListener("pageshow", finishGameRefresh, { once: true });
+    window.addEventListener("load", finishGameRefresh, { once: true });
+
+    // Covers cases where this script runs after the document has completed.
+    if (document.readyState === "complete") {
+      window.setTimeout(finishGameRefresh, 0);
+    }
   }
 
   window.addEventListener("message", (event) => {
