@@ -23,6 +23,8 @@
   let frozenDateNow = 0;
   let frozenPerformanceNow = 0;
   let rafQueue = [];
+  let nextRafId = 1;
+  const rafRecords = new Map();
   const timerRecords = new Map();
 
   function freezeGame() {
@@ -46,6 +48,7 @@
     const pendingFrames = rafQueue;
     rafQueue = [];
     for (const frame of pendingFrames) {
+      rafRecords.delete(frame.id);
       if (frame.cancelled) continue;
       try { frame.callback.call(window, nativePerformanceNow ? nativePerformanceNow() : nativeDateNow()); }
       catch (error) { nativeSetTimeout(function () { throw error; }, 0); }
@@ -66,14 +69,18 @@
   // until its current callback runs, so the animation loop naturally pauses.
   window.requestAnimationFrame = function (callback) {
     if (!frozen) return nativeRAF(callback);
-    const entry = { callback: callback, cancelled: false };
+    const id = nextRafId++;
+    const entry = { id: id, callback: callback, cancelled: false };
+    rafRecords.set(id, entry);
     rafQueue.push(entry);
-    return entry;
+    return id;
   };
 
   window.cancelAnimationFrame = function (id) {
-    if (id && typeof id === "object" && "cancelled" in id) {
-      id.cancelled = true;
+    const entry = rafRecords.get(id);
+    if (entry) {
+      entry.cancelled = true;
+      rafRecords.delete(id);
       return;
     }
     nativeCAF(id);
