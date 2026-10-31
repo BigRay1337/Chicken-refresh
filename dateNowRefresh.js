@@ -14,6 +14,7 @@
   const NativeXHR = window.XMLHttpRequest;
 
   let latestConfig = null;
+  let savedConfigBeforeSwipe = null;
   let rafRefreshPending = false;
   let refreshPageLoaded = document.readyState === "complete";
   const RAF_REFRESH_SESSION_KEY = "__chicken_raf_refresh_pending";
@@ -150,11 +151,18 @@
   window.addEventListener("message", function (event) {
     const data = event && event.data;
     if (data && data.command === "setSpeedConfig" && data.config) {
-      latestConfig = data.config;
-      if (rafRefreshPending) {
-        // Keep RAF unfrozen during document initialization. Enable it only
-        // after load, including when the config arrives after the load event.
-        setRequestAnimationFrameEnabled(refreshPageLoaded);
+      if (refreshCheckActive && rafRefreshPending) {
+        if (!savedConfigBeforeSwipe) savedConfigBeforeSwipe = Object.assign({}, data.config);
+        latestConfig = Object.assign({}, data.config, {
+          cbSetIntervalChecked: false,
+          cbSetTimeoutChecked: false,
+          cbPerformanceNowChecked: false,
+          cbDateNowChecked: false,
+          cbRequestAnimationFrameChecked: false
+        });
+        window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
+      } else {
+        latestConfig = data.config;
       }
     }
   });
@@ -162,13 +170,20 @@
   window.addEventListener("load", function () {
     refreshPageLoaded = true;
     if (rafRefreshPending) {
-      setRequestAnimationFrameEnabled(true);
-      // Begin checking on the refreshed document, not the document that
-      // received the swipe (which is replaced by location.reload()).
       refreshCheckActive = true;
       refreshActivitySeen = true;
       refreshStartedAt = nativeDateNow();
       lastActivityAt = refreshStartedAt;
+      if (latestConfig) {
+        latestConfig = Object.assign({}, latestConfig, {
+          cbSetIntervalChecked: false,
+          cbSetTimeoutChecked: false,
+          cbPerformanceNowChecked: false,
+          cbDateNowChecked: false,
+          cbRequestAnimationFrameChecked: false
+        });
+        window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
+      }
       nativeSetTimeout(checkRefreshCompletion, CHECK_INTERVAL_MS);
     }
   }, { once: true });
@@ -207,7 +222,11 @@
     }
 
     if (latestConfig) {
+      savedConfigBeforeSwipe = Object.assign({}, latestConfig);
       const swipeConfig = Object.assign({}, latestConfig, {
+        cbSetIntervalChecked: false,
+        cbSetTimeoutChecked: false,
+        cbPerformanceNowChecked: false,
         cbDateNowChecked: false,
         cbRequestAnimationFrameChecked: false
       });
@@ -245,25 +264,12 @@
       pendingRequests === 0 &&
       quietLongEnough
     ) {
-      // At the end of the game refresh, briefly disable RAF and immediately
-      // re-enable it so the final state is enabled.
-      setRequestAnimationFrameEnabled(false);
-      setRequestAnimationFrameEnabled(true);
-      rafRefreshPending = false;
-
-      if (latestConfig) {
-        const disabledConfig = Object.assign({}, latestConfig, {
-          cbDateNowChecked: false
-        });
-        latestConfig = disabledConfig;
-        window.postMessage({ command: "setSpeedConfig", config: disabledConfig }, "*");
-
-        const enabledConfig = Object.assign({}, disabledConfig, {
-          cbDateNowChecked: true
-        });
-        latestConfig = enabledConfig;
-        window.postMessage({ command: "setSpeedConfig", config: enabledConfig }, "*");
+      if (savedConfigBeforeSwipe) {
+        latestConfig = Object.assign({}, savedConfigBeforeSwipe);
+        window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
       }
+      savedConfigBeforeSwipe = null;
+      rafRefreshPending = false;
       refreshCheckActive = false;
       return;
     }
