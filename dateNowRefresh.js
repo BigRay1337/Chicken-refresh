@@ -8,7 +8,9 @@
   const MIN_REFRESH_WINDOW_MS = 750;
   const CHECK_INTERVAL_MS = 50;
   const nativeSetTimeout = window.setTimeout.bind(window);
-  const nativeDateNow = Date.now.bind(Date);
+  const nativeNow = window.performance && typeof window.performance.now === "function"
+    ? window.performance.now.bind(window.performance)
+    : Date.now.bind(Date);
   const nativeFetch = typeof window.fetch === "function"
     ? window.fetch.bind(window)
     : null;
@@ -44,7 +46,7 @@
   let refreshCheckActive = rafRefreshPending;
   let refreshActivitySeen = rafRefreshPending;
   let pendingRequests = 0;
-  let refreshStartedAt = rafRefreshPending ? nativeDateNow() : 0;
+  let refreshStartedAt = rafRefreshPending ? nativeNow() : 0;
   let lastActivityAt = refreshStartedAt;
   let domObserver = null;
   let pageLoadSeen = document.readyState === "complete";
@@ -52,7 +54,7 @@
   function markActivity() {
     if (!refreshCheckActive) return;
     refreshActivitySeen = true;
-    lastActivityAt = nativeDateNow();
+    lastActivityAt = nativeNow();
   }
 
   window.addEventListener("load", function () {
@@ -173,7 +175,7 @@
       setDateNowEnabled(false);
       refreshCheckActive = true;
       refreshActivitySeen = true;
-      refreshStartedAt = nativeDateNow();
+      refreshStartedAt = nativeNow();
       lastActivityAt = refreshStartedAt;
       nativeSetTimeout(checkRefreshCompletion, CHECK_INTERVAL_MS);
     }
@@ -223,7 +225,7 @@
     }, 50);
 
     refreshActivitySeen = false;
-    refreshStartedAt = nativeDateNow();
+    refreshStartedAt = nativeNow();
     lastActivityAt = refreshStartedAt;
     nativeSetTimeout(checkRefreshCompletion, 0);
   }, { capture: false, passive: true });
@@ -231,7 +233,7 @@
   function checkRefreshCompletion() {
     if (!refreshCheckActive) return;
 
-    const now = nativeDateNow();
+    const now = nativeNow();
     const minimumRefreshWindowPassed = now - refreshStartedAt >= MIN_REFRESH_WINDOW_MS;
     const quietLongEnough = now - lastActivityAt >= QUIET_WINDOW_MS;
     const documentLoaded = pageLoadSeen || document.readyState === "complete";
