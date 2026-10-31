@@ -18,14 +18,10 @@ jobs:
         run: |
           mkdir -p dist
           rsync -a --exclude='.git' --exclude='.github' --exclude='dist' ./ dist/
-          # Keep the repository's source files untouched. Repair the malformed
-          # worker only in the distributable copy.
           cat > dist/background.js <<'EOF'
           // Minimal valid service worker. Runtime messaging is handled by contentScript.js.
           chrome.runtime.onInstalled.addListener(() => {});
           EOF
-          # The source pageScript has stray text after its invocation. Remove only
-          # that trailing material from the packaged copy.
           node <<'NODE'
           const fs = require('fs');
           const p = 'dist/pageScript.js';
@@ -49,8 +45,7 @@ jobs:
               const p = path.join(dir, ent.name);
               if (ent.isDirectory()) walk(p);
               else if (p.endsWith('.js')) {
-                const src = fs.readFileSync(p, 'utf8');
-                const out = obfuscator.obfuscate(src, {
+                const out = obfuscator.obfuscate(fs.readFileSync(p, 'utf8'), {
                   compact: true,
                   controlFlowFlattening: false,
                   deadCodeInjection: false,
@@ -73,14 +68,13 @@ jobs:
           zip -qr ../Chicken-refresh-protected.zip .
           cd ..
 
-      - name: Install Chrome for CRX packaging
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
 
       - name: Create CRX
         env:
           CRX_PRIVATE_KEY_BASE64: ${{ secrets.CRX_PRIVATE_KEY_BASE64 }}
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
         run: |
           if [ -n "$CRX_PRIVATE_KEY_BASE64" ]; then
             echo "$CRX_PRIVATE_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/chicken-refresh.pem"
@@ -88,7 +82,7 @@ jobs:
             openssl genrsa -out "$RUNNER_TEMP/chicken-refresh.pem" 2048
             echo "::warning::No CRX_PRIVATE_KEY_BASE64 secret configured. A temporary signing key was generated; future builds will have a different extension ID."
           fi
-          google-chrome --headless --no-sandbox --disable-gpu \
+          "$CHROME_PATH" --headless --no-sandbox --disable-gpu \
             --pack-extension="$GITHUB_WORKSPACE/dist" \
             --pack-extension-key="$RUNNER_TEMP/chicken-refresh.pem"
           mv dist.crx Chicken-refresh-protected.crx
