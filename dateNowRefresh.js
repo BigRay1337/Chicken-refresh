@@ -209,9 +209,7 @@
     if (latestConfig) {
       const swipeConfig = Object.assign({}, latestConfig, {
         cbDateNowChecked: false,
-        // Never freeze requestAnimationFrame during a page/game refresh.
-        // The game needs animation frames to initialize and render its canvas.
-        cbRequestAnimationFrameChecked: true
+        cbRequestAnimationFrameChecked: false
       });
       latestConfig = swipeConfig;
       window.postMessage({ command: "setSpeedConfig", config: swipeConfig }, "*");
