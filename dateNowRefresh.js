@@ -14,34 +14,15 @@
   const NativeXHR = window.XMLHttpRequest;
 
   let latestConfig = null;
-  let restoreConfig = null;
   let rafRefreshPending = false;
   let refreshPageLoaded = document.readyState === "complete";
   const RAF_REFRESH_SESSION_KEY = "__chicken_raf_refresh_pending";
-  const RESTORE_CONFIG_SESSION_KEY = "__chicken_restore_speed_config";
 
   try {
     rafRefreshPending = sessionStorage.getItem(RAF_REFRESH_SESSION_KEY) === "1";
-    const savedConfig = sessionStorage.getItem(RESTORE_CONFIG_SESSION_KEY);
-    if (savedConfig) {
-      restoreConfig = JSON.parse(savedConfig);
-    }
     if (rafRefreshPending) sessionStorage.removeItem(RAF_REFRESH_SESSION_KEY);
   } catch (error) {
     // Session storage may be unavailable in restricted browsing contexts.
-  }
-
-  function setAllSpeedHooksEnabled(enabled) {
-    if (!latestConfig) return;
-    const nextConfig = Object.assign({}, latestConfig, {
-      cbSetIntervalChecked: enabled && !!latestConfig.cbSetIntervalChecked,
-      cbSetTimeoutChecked: enabled && !!latestConfig.cbSetTimeoutChecked,
-      cbPerformanceNowChecked: enabled && !!latestConfig.cbPerformanceNowChecked,
-      cbDateNowChecked: enabled && !!latestConfig.cbDateNowChecked,
-      cbRequestAnimationFrameChecked: enabled && !!latestConfig.cbRequestAnimationFrameChecked
-    });
-    latestConfig = nextConfig;
-    window.postMessage({ command: "setSpeedConfig", config: nextConfig }, "*");
   }
 
   function setRequestAnimationFrameEnabled(enabled) {
@@ -171,8 +152,9 @@
     if (data && data.command === "setSpeedConfig" && data.config) {
       latestConfig = data.config;
       if (rafRefreshPending) {
-        // Keep every speed hook disabled while the refreshed game initializes.
-        setAllSpeedHooksEnabled(false);
+        // Keep RAF unfrozen during document initialization. Enable it only
+        // after load, including when the config arrives after the load event.
+        setRequestAnimationFrameEnabled(refreshPageLoaded);
       }
     }
   });
@@ -180,7 +162,9 @@
   window.addEventListener("load", function () {
     refreshPageLoaded = true;
     if (rafRefreshPending) {
-      // Keep the hooks disabled until the refreshed game has settled.
+      setRequestAnimationFrameEnabled(true);
+      // Begin checking on the refreshed document, not the document that
+      // received the swipe (which is replaced by location.reload()).
       refreshCheckActive = true;
       refreshActivitySeen = true;
       refreshStartedAt = nativeDateNow();
@@ -223,13 +207,12 @@
     }
 
     if (latestConfig) {
-      restoreConfig = Object.assign({}, latestConfig);
-      try {
-        sessionStorage.setItem(RESTORE_CONFIG_SESSION_KEY, JSON.stringify(restoreConfig));
-      } catch (error) {
-        // The in-memory restore still works if session storage is unavailable.
-      }
-      setAllSpeedHooksEnabled(false);
+      const swipeConfig = Object.assign({}, latestConfig, {
+        cbDateNowChecked: false,
+        cbRequestAnimationFrameChecked: false
+      });
+      latestConfig = swipeConfig;
+      window.postMessage({ command: "setSpeedConfig", config: swipeConfig }, "*");
     }
 
     // A swipe of at least 30 px refreshes the website after the config is set.
@@ -262,20 +245,24 @@
       pendingRequests === 0 &&
       quietLongEnough
     ) {
-      // Restore the exact pre-swipe settings only after the refreshed game
-      // has loaded and network/DOM activity has settled.
+      // At the end of the game refresh, briefly disable RAF and immediately
+      // re-enable it so the final state is enabled.
+      setRequestAnimationFrameEnabled(false);
+      setRequestAnimationFrameEnabled(true);
       rafRefreshPending = false;
-      if (restoreConfig) {
-        latestConfig = Object.assign({}, restoreConfig);
-        window.postMessage({
-          command: "setSpeedConfig",
-          config: latestConfig
-        }, "*");
-      }
-      try {
-        sessionStorage.removeItem(RESTORE_CONFIG_SESSION_KEY);
-      } catch (error) {
-        // Ignore storage cleanup failures.
+
+      if (latestConfig) {
+        const disabledConfig = Object.assign({}, latestConfig, {
+          cbDateNowChecked: false
+        });
+        latestConfig = disabledConfig;
+        window.postMessage({ command: "setSpeedConfig", config: disabledConfig }, "*");
+
+        const enabledConfig = Object.assign({}, disabledConfig, {
+          cbDateNowChecked: true
+        });
+        latestConfig = enabledConfig;
+        window.postMessage({ command: "setSpeedConfig", config: enabledConfig }, "*");
       }
       refreshCheckActive = false;
       return;
