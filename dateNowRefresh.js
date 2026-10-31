@@ -18,10 +18,18 @@
   let rafRefreshPending = false;
   let refreshPageLoaded = document.readyState === "complete";
   const RAF_REFRESH_SESSION_KEY = "__chicken_raf_refresh_pending";
+  const RAF_REFRESH_CONFIG_KEY = "__chicken_raf_refresh_config";
 
   try {
     rafRefreshPending = sessionStorage.getItem(RAF_REFRESH_SESSION_KEY) === "1";
-    if (rafRefreshPending) sessionStorage.removeItem(RAF_REFRESH_SESSION_KEY);
+    if (rafRefreshPending) {
+      sessionStorage.removeItem(RAF_REFRESH_SESSION_KEY);
+      const savedConfig = sessionStorage.getItem(RAF_REFRESH_CONFIG_KEY);
+      if (savedConfig) {
+        savedConfigBeforeSwipe = JSON.parse(savedConfig);
+        sessionStorage.removeItem(RAF_REFRESH_CONFIG_KEY);
+      }
+    }
   } catch (error) {
     // Session storage may be unavailable in restricted browsing contexts.
   }
@@ -223,6 +231,11 @@
 
     if (latestConfig) {
       savedConfigBeforeSwipe = Object.assign({}, latestConfig);
+      try {
+        sessionStorage.setItem(RAF_REFRESH_CONFIG_KEY, JSON.stringify(savedConfigBeforeSwipe));
+      } catch (error) {
+        // The extension can still resume with its current in-memory settings.
+      }
       const swipeConfig = Object.assign({}, latestConfig, {
         cbSetIntervalChecked: false,
         cbSetTimeoutChecked: false,
@@ -269,6 +282,11 @@
         window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
       }
       savedConfigBeforeSwipe = null;
+      try {
+        sessionStorage.removeItem(RAF_REFRESH_CONFIG_KEY);
+      } catch (error) {
+        // Ignore unavailable session storage.
+      }
       rafRefreshPending = false;
       refreshCheckActive = false;
       return;
