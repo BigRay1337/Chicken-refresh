@@ -21,6 +21,7 @@
 
   let frozen = false;
   let frozenDateNow = 0;
+  let dateNowLocked = false;
   let frozenPerformanceNow = 0;
   let rafQueue = [];
   let nextRafId = 1;
@@ -43,6 +44,10 @@
   function unfreezeGame() {
     if (!frozen) return;
     frozen = false;
+    // After the swipe-up action, keep Date.now() at a fixed value while
+    // allowing animation frames and timers to resume normally.
+    frozenDateNow = nativeDateNow();
+    dateNowLocked = true;
     window.postMessage({ command: "chickenFreezeState", frozen: false }, "*");
 
     const pendingFrames = rafQueue;
@@ -145,7 +150,7 @@
 
   // Keep elapsed-time checks from jumping forward while the game is paused.
   Date.now = function () {
-    return frozen ? frozenDateNow : nativeDateNow();
+    return (frozen || dateNowLocked) ? frozenDateNow : nativeDateNow();
   };
 
   if (nativePerformanceNow) {
