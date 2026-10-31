@@ -1,0 +1,103 @@
+name: Build protected Kiwi packages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare clean production copy
+        run: |
+          mkdir -p dist
+          rsync -a --exclude='.git' --exclude='.github' --exclude='dist' ./ dist/
+          # Keep the repository's source files untouched. Repair the malformed
+          # worker only in the distributable copy.
+          cat > dist/background.js <<'EOF'
+          // Minimal valid service worker. Runtime messaging is handled by contentScript.js.
+          chrome.runtime.onInstalled.addListener(() => {});
+          EOF
+          # The source pageScript has stray text after its invocation. Remove only
+          # that trailing material from the packaged copy.
+          node <<'NODE'
+          const fs = require('fs');
+          const p = 'dist/pageScript.js';
+          let s = fs.readFileSync(p, 'utf8');
+          const marker = 'pageScript();';
+          const i = s.lastIndexOf(marker);
+          if (i < 0) throw new Error('pageScript() entry point not found');
+          s = s.slice(0, i + marker.length) + '\n';
+          fs.writeFileSync(p, s);
+          NODE
+
+      - name: Obfuscate JavaScript in production copy
+        run: |
+          npm install --no-save javascript-obfuscator
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+          const obfuscator = require('javascript-obfuscator');
+          function walk(dir) {
+            for (const ent of fs.readdirSync(dir, {withFileTypes:true})) {
+              const p = path.join(dir, ent.name);
+              if (ent.isDirectory()) walk(p);
+              else if (p.endsWith('.js')) {
+                const src = fs.readFileSync(p, 'utf8');
+                const out = obfuscator.obfuscate(src, {
+                  compact: true,
+                  controlFlowFlattening: false,
+                  deadCodeInjection: false,
+                  stringArray: true,
+                  stringArrayEncoding: ['base64'],
+                  stringArrayThreshold: 0.75,
+                  renameGlobals: false,
+                  selfDefending: false
+                }).getObfuscatedCode();
+                fs.writeFileSync(p, out);
+              }
+            }
+          }
+          walk('dist');
+          NODE
+
+      - name: Create ZIP
+        run: |
+          cd dist
+          zip -qr ../Chicken-refresh-protected.zip .
+          cd ..
+
+      - name: Install Chrome for CRX packaging
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Create CRX
+        env:
+          CRX_PRIVATE_KEY_BASE64: ${{ secrets.CRX_PRIVATE_KEY_BASE64 }}
+        run: |
+          if [ -n "$CRX_PRIVATE_KEY_BASE64" ]; then
+            echo "$CRX_PRIVATE_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/chicken-refresh.pem"
+          else
+            openssl genrsa -out "$RUNNER_TEMP/chicken-refresh.pem" 2048
+            echo "::warning::No CRX_PRIVATE_KEY_BASE64 secret configured. A temporary signing key was generated; future builds will have a different extension ID."
+          fi
+          google-chrome --headless --no-sandbox --disable-gpu \
+            --pack-extension="$GITHUB_WORKSPACE/dist" \
+            --pack-extension-key="$RUNNER_TEMP/chicken-refresh.pem"
+          mv dist.crx Chicken-refresh-protected.crx
+          rm -f "$RUNNER_TEMP/chicken-refresh.pem"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Chicken-refresh-Kiwi-packages
+          path: |
+            Chicken-refresh-protected.zip
+            Chicken-refresh-protected.crx
+          if-no-files-found: error
