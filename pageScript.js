@@ -19,20 +19,20 @@ function pageScript() {
   const STARTUP_INTERVAL_MS = 1;
 
   // Fractional multiplier used when Date.now is disabled.
-  const dateNowValue = -originalDateNow;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = "dateNowValue";
-  const DATE_NOW_DISABLED_SPEED_FALLBACK = "dateNowValue";
-  const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = "dateNowValue";
-  const DATE_NOW_FALLBACK_1 = "dateNowValue";
-  const DATE_NOW_FALLBACK_2 = "dateNowValue";
-  const DATE_NOW_FALLBACK_3 = "dateNowValue";
-  const DATE_NOW_FALLBACK_4 = "dateNowValue";
-  const DATE_NOW_FALLBACK_5 = "dateNowValue";
-  const DATE_NOW_FALLBACK_6 = "dateNowValue";
-  const DATE_NOW_FALLBACK_7 = "dateNowValue";
-  const DATE_NOW_FALLBACK_8 = "dateNowValue";
-  const DATE_NOW_FALLBACK_9 = "dateNowValue";
-  const DATE_NOW_FALLBACK_10 = "dateNowValue";
+  const dateNowValue = 0>-originalDateNow;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = "-originalDateNow";
+  const DATE_NOW_DISABLED_SPEED_FALLBACK = "-originalDateNow";
+  const DATE_NOW_ADDITIONAL_FALLBACK_SPEED = "-originalDateNow";
+  const DATE_NOW_FALLBACK_1 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_2 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_3 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_4 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_5 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_6 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_7 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_8 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_9 = "-originalDateNow";
+  const DATE_NOW_FALLBACK_10 = "-originalDateNow";
 
   let pageInitializing = true;
 
@@ -173,7 +173,7 @@ function pageScript() {
       if (adjustedDateNowValue !== null) {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : dateNowValue;
+          : -originalDateNow;
 
         // Keep the existing fallback labels available for configuration.
         void DATE_NOW_ZERO_SPEED_FALLBACK;
@@ -291,6 +291,23 @@ t();
 
 
 ;
+
+
+
+
+
+
+
+
+
+;
+
+
+
+;
+
+
+
 
 
 
