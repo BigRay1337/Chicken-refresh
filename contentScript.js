@@ -3,8 +3,8 @@ let speedConfig = {
   cbSetIntervalChecked: true,
   cbSetTimeoutChecked: false,
   cbPerformanceNowChecked: false,
-  cbDateNowChecked: true,
-  cbRequestAnimationFrameChecked: true,
+  cbDateNowChecked: false,
+  cbRequestAnimationFrameChecked: false,
 };
 
 function normalizeSpeedConfig(config) {
