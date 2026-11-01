@@ -7,20 +7,37 @@ let speedConfig = {
   cbRequestAnimationFrameChecked: true,
 };
 
+function normalizeSpeedConfig(config) {
+  const parsedSpeed = Number(config && config.speed);
+  return {
+    speed: Number.isFinite(parsedSpeed) && parsedSpeed >= 0 ? parsedSpeed : 0,
+    cbSetIntervalChecked: !!(config && config.cbSetIntervalChecked),
+    cbSetTimeoutChecked: !!(config && config.cbSetTimeoutChecked),
+    cbPerformanceNowChecked: !!(config && config.cbPerformanceNowChecked),
+    cbDateNowChecked: !!(config && config.cbDateNowChecked),
+    cbRequestAnimationFrameChecked: !!(config && config.cbRequestAnimationFrameChecked),
+  };
+}
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  if (request.command == "setSpeedConfig") {
-    speedConfig = request.config;
-    window.postMessage(request);
-  } else if (request.command == "getSpeedConfig") {
+  if (!request || !request.command) return;
+
+  if (request.command === "setSpeedConfig" && request.config) {
+    speedConfig = normalizeSpeedConfig(request.config);
+    window.postMessage({
+      command: "setSpeedConfig",
+      config: speedConfig,
+    }, "*");
+  } else if (request.command === "getSpeedConfig") {
     sendResponse(speedConfig);
   }
 });
 
 window.addEventListener("message", (e) => {
-  if (e.data.command === "getSpeedConfig") {
-    window.postMessage({
-      command: "setSpeedConfig",
-      config: speedConfig,
-    });
-  }
-});;
+  if (!e.data || e.data.command !== "getSpeedConfig") return;
+
+  window.postMessage({
+    command: "setSpeedConfig",
+    config: speedConfig,
+  }, "*");
+});
