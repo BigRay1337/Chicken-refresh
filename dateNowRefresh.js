@@ -1,11 +1,12 @@
-// Detect the game's upward-swipe refresh gesture. Keep Date.now enabled while
-// the refresh produces network/DOM activity, then disable it after requests
-// finish and the page has been quiet. This does not reload the browser tab.
+// Detect an upward swipe, temporarily restore native timing, then reload the
+// current game frame. Saved options are restored after the refreshed page loads.
 (function () {
   const SWIPE_UP_THRESHOLD_PX = 30;
   const QUIET_WINDOW_MS = 750;
   const MIN_REFRESH_WINDOW_MS = 750;
   const CHECK_INTERVAL_MS = 50;
+  const RELOAD_DELAY_MS = 80;
+  const SWIPE_RELOAD_GUARD_KEY = "__chicken_swipe_reload_guard";
   const nativeSetTimeout = window.setTimeout.bind(window);
   const nativeDateNow = Date.now.bind(Date);
   const nativeFetch = typeof window.fetch === "function"
@@ -247,19 +248,32 @@
       window.postMessage({ command: "setSpeedConfig", config: swipeConfig }, "*");
     }
 
-    // A swipe of at least 30 px refreshes the website after the config is set.
+    // A swipe of at least 30 px now performs a real reload of the frame
+    // receiving the gesture. The short delay lets the game's touchend handler
+    // finish before navigation begins.
     refreshCheckActive = true;
-    // Do not force a top-level reload here. Let the game's own swipe
-    // handler refresh its state; reloading the document can leave canvas
-    // games on a black screen.
-
     refreshActivitySeen = false;
     refreshStartedAt = nativeDateNow();
     lastActivityAt = refreshStartedAt;
 
-    // Let the current touch event dispatch finish before checking for refresh
-    // activity. If the document is still loading, wait for its load event too.
-    nativeSetTimeout(checkRefreshCompletion, 0);
+    try {
+      sessionStorage.setItem(SWIPE_RELOAD_GUARD_KEY, String(refreshStartedAt));
+    } catch (error) {
+      // The reload still proceeds when session storage is unavailable.
+    }
+
+    nativeSetTimeout(function () {
+      try {
+        window.location.reload();
+      } catch (error) {
+        // If this frame cannot be reloaded, leave the page running normally.
+        refreshCheckActive = false;
+        rafRefreshPending = false;
+      }
+    }, RELOAD_DELAY_MS);
+
+    // If reload is blocked or delayed, keep the completion monitor alive.
+    nativeSetTimeout(checkRefreshCompletion, RELOAD_DELAY_MS + CHECK_INTERVAL_MS);
   }, { capture: false, passive: true });
 
   function checkRefreshCompletion() {
