@@ -72,18 +72,22 @@ function pageScript() {
     reloadTimers();
   }, 0);
 
-  window.addEventListener("message", (e) => {
-    if (!e.data || e.data.command !== "setSpeedConfig") return;
-
-    speedConfig = {
-      speed: Number(e.data.config?.speed) || 0,
-      cbSetIntervalChecked: !!e.data.config?.cbSetIntervalChecked,
-      cbSetTimeoutChecked: !!e.data.config?.cbSetTimeoutChecked,
-      cbPerformanceNowChecked: !!e.data.config?.cbPerformanceNowChecked,
-      cbDateNowChecked: e.data.config?.cbDateNowChecked !== false,
-      cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
+  function normalizeSpeedConfig(config) {
+    const parsedSpeed = Number(config && config.speed);
+    return {
+      speed: Number.isFinite(parsedSpeed) && parsedSpeed >= 0 ? parsedSpeed : 1,
+      cbSetIntervalChecked: !!(config && config.cbSetIntervalChecked),
+      cbSetTimeoutChecked: !!(config && config.cbSetTimeoutChecked),
+      cbPerformanceNowChecked: !!(config && config.cbPerformanceNowChecked),
+      cbDateNowChecked: !!(config && config.cbDateNowChecked),
+      cbRequestAnimationFrameChecked: !!(config && config.cbRequestAnimationFrameChecked),
     };
+  }
 
+  window.addEventListener("message", (e) => {
+    if (!e.data || e.data.command !== "setSpeedConfig" || !e.data.config) return;
+
+    speedConfig = normalizeSpeedConfig(e.data.config);
     previousDateNowChecked = speedConfig.cbDateNowChecked;
     reloadTimers();
   });
@@ -171,6 +175,9 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (adjustedDateNowValue !== null) {
+        // Checked: scale Date.now by the selected speed. Unchecked:
+        // dateNowValue is the disabled-clock fallback; if it is not a finite
+        // multiplier, the native timestamp recovery below keeps game clocks valid.
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : dateNowValue;
