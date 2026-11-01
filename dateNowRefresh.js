@@ -166,7 +166,7 @@
           cbSetTimeoutChecked: false,
           cbPerformanceNowChecked: false,
           cbDateNowChecked: false,
-          cbRequestAnimationFrameChecked: false
+          cbRequestAnimationFrameChecked: true
         });
         window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
       } else {
@@ -188,7 +188,7 @@
           cbSetTimeoutChecked: false,
           cbPerformanceNowChecked: false,
           cbDateNowChecked: false,
-          cbRequestAnimationFrameChecked: false
+          cbRequestAnimationFrameChecked: true
         });
         window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
       }
@@ -241,7 +241,7 @@
         cbSetTimeoutChecked: false,
         cbPerformanceNowChecked: false,
         cbDateNowChecked: false,
-        cbRequestAnimationFrameChecked: false
+        cbRequestAnimationFrameChecked: true
       });
       latestConfig = swipeConfig;
       window.postMessage({ command: "setSpeedConfig", config: swipeConfig }, "*");
@@ -249,9 +249,9 @@
 
     // A swipe of at least 30 px refreshes the website after the config is set.
     refreshCheckActive = true;
-    nativeSetTimeout(function () {
-      window.location.reload();
-    }, 50);
+    // Do not force a top-level reload here. Let the game's own swipe
+    // handler refresh its state; reloading the document can leave canvas
+    // games on a black screen.
 
     refreshActivitySeen = false;
     refreshStartedAt = nativeDateNow();
