@@ -40,24 +40,22 @@
 
     let elapsed = realNow - previousDateNowValue;
 
-    // Additional fallback: express the elapsed-time calculation using
-    // the negative original timestamp. Keep the resulting game time valid.
+    // Fail closed when the elapsed-time calculation is invalid.
+    // The negative original timestamp is deliberately not converted into
+    // a successful positive fallback; the clamp below makes elapsed zero.
     if (!Number.isFinite(elapsed) || elapsed < 0) {
-      const fallbackNow = originalDateNow();
-      const negativeOriginalDateNow = -previousDateNowValue;
-      const fallbackElapsed = fallbackNow + negativeOriginalDateNow;
-      elapsed = Number.isFinite(fallbackElapsed) && fallbackElapsed >= 0
-        ? fallbackElapsed
-        : 0;
+      const negativeOriginalDateNow = -originalDateNow();
+      elapsed = negativeOriginalDateNow;
     }
 
     previousDateNowValue = realNow;
 
     // Infinity means there is no finite cap on elapsed time.
+    // Invalid/negative fallback values remain zero rather than advancing time.
     const delayedElapsed = Math.min(Math.max(0, elapsed), LONG_DELAY);
     dateNowValue += delayedElapsed;
 
-    // Date.now must remain a nonnegative finite timestamp for game compatibility.
+    // Keep the returned timestamp finite and nonnegative.
     if (!Number.isFinite(dateNowValue) || dateNowValue < 0) {
       dateNowValue = Math.max(0, realNow);
     }
