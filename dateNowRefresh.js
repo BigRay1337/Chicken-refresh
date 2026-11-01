@@ -166,7 +166,7 @@
           cbSetTimeoutChecked: false,
           cbPerformanceNowChecked: false,
           cbDateNowChecked: false,
-          cbRequestAnimationFrameChecked: true
+          cbRequestAnimationFrameChecked: false
         });
         window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
       } else {
@@ -188,7 +188,7 @@
           cbSetTimeoutChecked: false,
           cbPerformanceNowChecked: false,
           cbDateNowChecked: false,
-          cbRequestAnimationFrameChecked: true
+          cbRequestAnimationFrameChecked: false
         });
         window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
       }
@@ -241,7 +241,7 @@
         cbSetTimeoutChecked: false,
         cbPerformanceNowChecked: false,
         cbDateNowChecked: false,
-        cbRequestAnimationFrameChecked: true
+        cbRequestAnimationFrameChecked: false
       });
       latestConfig = swipeConfig;
       window.postMessage({ command: "setSpeedConfig", config: swipeConfig }, "*");
