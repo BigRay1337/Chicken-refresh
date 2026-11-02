@@ -31,9 +31,14 @@
     cbRequestAnimationFrameChecked: false
   };
 
+  // Keep the negative epoch offset private to this closure. Date.now() starts
+  // at elapsed time zero while the Date.now option is enabled.
+  const originalDateNow = native.dateNow();
+  const dateNowValue = -originalDateNow;
+
   const clock = {
-    realDateStart: native.dateNow(),
-    virtualDateStart: native.dateNow(),
+    realDateStart: originalDateNow,
+    virtualDateStart: originalDateNow + dateNowValue,
     realPerformanceStart: native.performanceNow ? native.performanceNow() : 0,
     virtualPerformanceStart: native.performanceNow ? native.performanceNow() : 0
   };
@@ -119,7 +124,7 @@
     if (config.cbDateNowChecked) {
       clock.virtualDateStart += (nowDate - clock.realDateStart) * previousSpeed;
     } else {
-      clock.virtualDateStart = nowDate;
+      clock.virtualDateStart = nowDate + dateNowValue;
     }
     clock.realDateStart = nowDate;
 
