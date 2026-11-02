@@ -38,7 +38,7 @@
 
   const clock = {
     realDateStart: originalDateNow,
-    virtualDateStart: originalDateNow + dateNowValue,
+    virtualDateStart: -dateNowValue,
     realPerformanceStart: native.performanceNow ? native.performanceNow() : 0,
     virtualPerformanceStart: native.performanceNow ? native.performanceNow() : 0
   };
@@ -124,7 +124,7 @@
     if (config.cbDateNowChecked) {
       clock.virtualDateStart += (nowDate - clock.realDateStart) * previousSpeed;
     } else {
-      clock.virtualDateStart = nowDate + dateNowValue;
+      clock.virtualDateStart = nowDate;
     }
     clock.realDateStart = nowDate;
 
