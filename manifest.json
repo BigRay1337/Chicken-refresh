@@ -1,9 +1,9 @@
 {
   "update_url": "https://clients2.google.com/service/update2/crx",
   "manifest_version": 3,
-  "name": "HTML5 Universal Speed Hack for Kiwi Browser",
-  "description": "Speeds up or slows down browser games, HTML5 and more in Kiwi Browser.",
-  "version": "12.0",
+  "name": "HTML5 Universal Speed Hack",
+  "description": "Speeds up or slows down browser games, HTML5 and more...",
+  "version": "12.1",
   "host_permissions": [
     "<all_urls>"
   ],
@@ -27,8 +27,8 @@
         "<all_urls>"
       ],
       "js": [
-        "dateNowRefresh.js",
-        "pageScript.js"
+        "pageScript.js",
+        "dateNowRefresh.js"
       ]
     },
     {
