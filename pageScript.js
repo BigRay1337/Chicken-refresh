@@ -17,7 +17,6 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = -dateNowValue;
   let pageInitializing = true;
 
   let timers = [];
@@ -156,13 +155,14 @@ function pageScript() {
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
+    const DATE_NOW_ZERO_SPEED_FALLBACK = -dateNowValue;
 
     Date.now = () => {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
         const multiplier = speedConfig.cbDateNowChecked
-          ? speedConfig.speed
+          ? 0
           : speedConfig.speed === 0
             ? DATE_NOW_ZERO_SPEED_FALLBACK
             : -originalDateNow;
