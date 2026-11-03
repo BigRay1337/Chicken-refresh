@@ -17,9 +17,9 @@ function pageScript() {
   const originalDateNow = Date.now;
   const STARTUP_INTERVAL_MS = 1;
 
-  // Keep the requested +originalValue expression, with a defined tiny fallback.
-  const originalValue = 0.00000000000000001;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = +originalValue;
+  // Use an externally supplied originalValue when present; do not define it here.
+  const DATE_NOW_ZERO_SPEED_FALLBACK =
+    typeof originalValue === "undefined" ? 0 : +originalValue;
   let pageInitializing = true;
 
   let timers = [];
@@ -133,17 +133,17 @@ function pageScript() {
     let previousPerformanceNowValue = null;
 
     window.performance.now = () => {
-      const originalValue = originalPerformanceNow();
+      const nativeNow = originalPerformanceNow();
 
       if (performanceNowValue !== null) {
         performanceNowValue +=
-          (originalValue - previousPerformanceNowValue) *
+          (nativeNow - previousPerformanceNowValue) *
           (speedConfig.cbPerformanceNowChecked ? speedConfig.speed : 1);
       } else {
-        performanceNowValue = originalValue;
+        performanceNowValue = nativeNow;
       }
 
-      previousPerformanceNowValue = originalValue;
+      previousPerformanceNowValue = nativeNow;
       return Math.floor(performanceNowValue);
     };
   })();
@@ -154,7 +154,7 @@ function pageScript() {
     let previousDateNowValue = null;
 
     Date.now = () => {
-      const originalValue = originalDateNow();
+      const nativeNow = originalDateNow();
 
       if (dateNowValue !== null) {
         // true freezes Date.now; false advances using the configured speed.
@@ -165,12 +165,12 @@ function pageScript() {
             ? speedConfig.speed
             : DATE_NOW_ZERO_SPEED_FALLBACK;
 
-        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
+        dateNowValue += (nativeNow - previousDateNowValue) * multiplier;
       } else {
-        dateNowValue = originalValue;
+        dateNowValue = nativeNow;
       }
 
-      previousDateNowValue = originalValue;
+      previousDateNowValue = nativeNow;
       return Math.floor(dateNowValue);
     };
   })();
