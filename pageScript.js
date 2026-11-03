@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   const STARTUP_INTERVAL_MS = 1;
   // Used only when Date.now is disabled and the configured speed is zero.
-  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.3699999999999999;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = +originalValue;
   let pageInitializing = true;
 
   let timers = [];
@@ -230,3 +230,4 @@ function pageScript() {
 
 
 pageScript();
+();
