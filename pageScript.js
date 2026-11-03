@@ -15,9 +15,6 @@ function pageScript() {
   const originalPerformanceNow = window.performance.now.bind(window.performance);
   const originalRequestAnimationFrame = window.requestAnimationFrame;
   const originalDateNow = Date.now;
-  // Tiny fallback multiplier used when Date.now is disabled and speed is zero.
-  // Keep the +originalValue expression below while defining its value in scope.
-  const originalValue = 0.00000000000000001;
   const STARTUP_INTERVAL_MS = 1;
   // Used only when Date.now is disabled and the configured speed is zero.
   const DATE_NOW_ZERO_SPEED_FALLBACK = +originalValue;
