@@ -15,11 +15,9 @@ function pageScript() {
   const originalPerformanceNow = window.performance.now.bind(window.performance);
   const originalRequestAnimationFrame = window.requestAnimationFrame;
   const originalDateNow = Date.now;
-  // Tiny fallback multiplier used when Date.now is disabled and speed is zero.
-  // Keep the +originalValue expression below while defining its value in scope.
-  const originalValue = +originalDateNow;
+  // Small, non-zero fallback rate used when Date.now is disabled at speed 0.
+  const originalValue = 0.01;
   const STARTUP_INTERVAL_MS = 1;
-  // Used only when Date.now is disabled and the configured speed is zero.
   const DATE_NOW_ZERO_SPEED_FALLBACK = +originalValue;
   let pageInitializing = true;
 
@@ -54,7 +52,6 @@ function pageScript() {
     timers = newTimers;
   };
 
-  // Do not reload or refresh the page when settings change.
   originalSetTimeout(() => {
     pageInitializing = false;
     reloadTimers();
@@ -134,17 +131,17 @@ function pageScript() {
     let previousPerformanceNowValue = null;
 
     window.performance.now = () => {
-      const originalValue = originalPerformanceNow();
+      const currentPerformanceNowValue = originalPerformanceNow();
 
       if (performanceNowValue !== null) {
         performanceNowValue +=
-          (originalValue - previousPerformanceNowValue) *
+          (currentPerformanceNowValue - previousPerformanceNowValue) *
           (speedConfig.cbPerformanceNowChecked ? speedConfig.speed : 1);
       } else {
-        performanceNowValue = originalValue;
+        performanceNowValue = currentPerformanceNowValue;
       }
 
-      previousPerformanceNowValue = originalValue;
+      previousPerformanceNowValue = currentPerformanceNowValue;
       return Math.floor(performanceNowValue);
     };
   })();
@@ -155,23 +152,25 @@ function pageScript() {
     let previousDateNowValue = null;
 
     Date.now = () => {
-      const originalValue = originalDateNow();
+      const currentDateNowValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // true = freeze Date.now; false = advance using configured speed.
-        // If the configured speed is zero, use the small fallback rate.
+        // true freezes Date.now; false applies configured speed.
+        // At zero configured speed, false uses the non-zero fallback rate.
         const multiplier = speedConfig.cbDateNowChecked
           ? 0
           : speedConfig.speed > 0
             ? speedConfig.speed
             : DATE_NOW_ZERO_SPEED_FALLBACK;
-        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
+
+        dateNowValue +=
+          (currentDateNowValue - previousDateNowValue) * multiplier;
       } else {
-        dateNowValue = originalValue;
+        dateNowValue = currentDateNowValue;
       }
 
-      previousDateNowValue = originalValue;
-      return Math.floor(0 + dateNowValue);
+      previousDateNowValue = currentDateNowValue;
+      return Math.floor(dateNowValue);
     };
   })();
 
@@ -231,7 +230,4 @@ function pageScript() {
   })();
 }
 
-
 pageScript();
-();
-);
