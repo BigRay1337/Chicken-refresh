@@ -15,9 +15,9 @@ function pageScript() {
   const originalPerformanceNow = window.performance.now.bind(window.performance);
   const originalRequestAnimationFrame = window.requestAnimationFrame;
   const originalDateNow = Date.now;
-  let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = +originalValue;
+  // Used only when Date.now is disabled and the configured speed is zero.
+  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.3699999999999999;
   let pageInitializing = true;
 
   let timers = [];
@@ -68,12 +68,6 @@ function pageScript() {
       cbDateNowChecked: e.data.config?.cbDateNowChecked !== false,
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
-
-    if (previousDateNowChecked === null) {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    } else {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    }
 
     reloadTimers();
   });
@@ -161,11 +155,13 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
+        // true = freeze Date.now; false = advance using configured speed.
+        // If the configured speed is zero, use the small fallback rate.
         const multiplier = speedConfig.cbDateNowChecked
           ? 0
-          : speedConfig.speed === 0
-            ? elapsed - DATE_NOW_ZERO_SPEED_FALLBACK + elapsed
-            : 0;
+          : speedConfig.speed > 0
+            ? speedConfig.speed
+            : DATE_NOW_ZERO_SPEED_FALLBACK;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
@@ -231,8 +227,6 @@ function pageScript() {
     };
   })();
 }
-
-pageScript();
 
 
 pageScript();
