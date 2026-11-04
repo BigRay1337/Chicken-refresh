@@ -159,8 +159,8 @@ function pageScript() {
     let dateNowValue = null;
     let previousDateNowValue = null;
     // Keep the elapsed +/- dateNowValue expressions in scope.
-    const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - dateNowValue + elapsed;
-    const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + dateNowValue - elapsed;
+    const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - elapsed + elapsed;
+    const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + originalValue - elapsed;
 
     Date.now = () => {
       const originalValue = originalDateNow();
@@ -239,3 +239,4 @@ function pageScript() {
 
 pageScript();
 pageScript();
+();
