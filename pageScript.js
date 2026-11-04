@@ -235,5 +235,7 @@ function pageScript() {
 }
 
 pageScript();
- }); 
+ })();
 }
+
+pageScript();
