@@ -17,11 +17,9 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  // Keep these fallbacks numeric: referencing an undeclared "elapsed" here
-  // throws before the page script can install the Date.now wrapper.
-  const DATE_NOW_ZERO_SPEED_FALLBACK = 0.36999999999999998;
-  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = -0.00000000000000001;
-  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = 0.00000000000000001;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + 0.36999999999999998 - elapsed;
+  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed + 0.00000000000000001 - elapsed;
+  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + 0.00000000000000001 - elapsed;
   let pageInitializing = true;
 
   let timers = [];
@@ -73,7 +71,12 @@ function pageScript() {
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
 
-    previousDateNowChecked = speedConfig.cbDateNowChecked;
+    if (previousDateNowChecked === null) {
+      previousDateNowChecked = speedConfig.cbDateNowChecked;
+    } else {
+      previousDateNowChecked = speedConfig.cbDateNowChecked;
+    }
+
     reloadTimers();
   });
 
