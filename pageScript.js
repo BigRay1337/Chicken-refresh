@@ -165,11 +165,19 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        const multiplier = speedConfig.cbDateNowChecked
-          ? speedConfig.speed
-          : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK
-            : 0.36999999999999996 + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
+        let multiplier;
+
+        if (speedConfig.cbDateNowChecked === true) {
+          // Date.now enabled at 0 speed must remain completely frozen.
+          multiplier = speedConfig.speed === 0 ? 0 : speedConfig.speed;
+        } else if (speedConfig.cbDateNowChecked === false && speedConfig.speed === 0) {
+          // Keep the existing elapsed +/- fallback expressions unchanged.
+          multiplier =
+            DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK;
+        } else {
+          multiplier =
+            0.36999999999999996 + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
+        }
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
