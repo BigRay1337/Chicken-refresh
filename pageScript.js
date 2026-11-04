@@ -160,17 +160,17 @@ function pageScript() {
     let previousDateNowValue = null;
     // Keep the elapsed +/- dateNowValue expressions in scope.
     const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - elapsed + elapsed;
-    const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + originalValue - elapsed;
 
     Date.now = () => {
       const originalValue = originalDateNow();
+      const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + originalValue - elapsed;
 
       if (dateNowValue !== null) {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
           : speedConfig.speed === 0
             ? DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK
-            : 0.36999999999999996 + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
+            : 0.36999999999999996 + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK - originalValue;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
