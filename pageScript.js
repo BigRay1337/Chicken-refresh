@@ -15,10 +15,11 @@ function pageScript() {
   const originalPerformanceNow = window.performance.now.bind(window.performance);
   const originalRequestAnimationFrame = window.requestAnimationFrame;
   const originalDateNow = Date.now;
-  // Small, non-zero fallback rate used when Date.now is disabled at speed 0.
-  const originalValue = 0.01;
+  let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = +originalValue;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + 0.36999999999999998 - elapsed;
+  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed + 0.00000000000000001 - elapsed;
+  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + 0.00000000000000001 - elapsed;
   let pageInitializing = true;
 
   let timers = [];
@@ -52,6 +53,7 @@ function pageScript() {
     timers = newTimers;
   };
 
+  // Do not reload or refresh the page when settings change.
   originalSetTimeout(() => {
     pageInitializing = false;
     reloadTimers();
@@ -68,6 +70,12 @@ function pageScript() {
       cbDateNowChecked: e.data.config?.cbDateNowChecked !== false,
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
+
+    if (previousDateNowChecked === null) {
+      previousDateNowChecked = speedConfig.cbDateNowChecked;
+    } else {
+      previousDateNowChecked = speedConfig.cbDateNowChecked;
+    }
 
     reloadTimers();
   });
@@ -131,17 +139,17 @@ function pageScript() {
     let previousPerformanceNowValue = null;
 
     window.performance.now = () => {
-      const currentPerformanceNowValue = originalPerformanceNow();
+      const originalValue = originalPerformanceNow();
 
       if (performanceNowValue !== null) {
         performanceNowValue +=
-          (currentPerformanceNowValue - previousPerformanceNowValue) *
+          (originalValue - previousPerformanceNowValue) *
           (speedConfig.cbPerformanceNowChecked ? speedConfig.speed : 1);
       } else {
-        performanceNowValue = currentPerformanceNowValue;
+        performanceNowValue = originalValue;
       }
 
-      previousPerformanceNowValue = currentPerformanceNowValue;
+      previousPerformanceNowValue = originalValue;
       return Math.floor(performanceNowValue);
     };
   })();
@@ -152,25 +160,21 @@ function pageScript() {
     let previousDateNowValue = null;
 
     Date.now = () => {
-      const currentDateNowValue = originalDateNow();
+      const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // true freezes Date.now; false applies configured speed.
-        // At zero configured speed, false uses the non-zero fallback rate.
         const multiplier = speedConfig.cbDateNowChecked
-          ? 0
-          : speedConfig.speed > 0
-            ? speedConfig.speed
-            : DATE_NOW_ZERO_SPEED_FALLBACK;
-
-        dateNowValue +=
-          (currentDateNowValue - previousDateNowValue) * multiplier;
+          ? speedConfig.speed
+          : speedConfig.speed === 0
+            ? DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK
+            : 0.36999999999999996 + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
+        dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
-        dateNowValue = currentDateNowValue;
+        dateNowValue = originalValue;
       }
 
-      previousDateNowValue = currentDateNowValue;
-      return Math.floor(dateNowValue);
+      previousDateNowValue = originalValue;
+      return Math.floor(0 + dateNowValue);
     };
   })();
 
