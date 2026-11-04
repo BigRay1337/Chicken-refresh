@@ -20,8 +20,6 @@ function pageScript() {
   // Keep the elapsed + value - elapsed fallback expressions finite and defined.
   const elapsed = 0;
   const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + 0.36999999999999998 - elapsed;
-  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - dateNowValue + elapsed;
-  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + dateNowValue - elapsed;
   let pageInitializing = true;
 
   let timers = [];
@@ -160,6 +158,9 @@ function pageScript() {
   (function () {
     let dateNowValue = null;
     let previousDateNowValue = null;
+    // Keep the elapsed +/- dateNowValue expressions in scope.
+    const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - dateNowValue + elapsed;
+    const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + dateNowValue - elapsed;
 
     Date.now = () => {
       const originalValue = originalDateNow();
