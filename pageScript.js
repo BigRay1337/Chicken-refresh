@@ -17,7 +17,7 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  // Preserve the elapsed plus/minus fallback expressions.
+  // Keep the elapsed + value - elapsed fallback expressions finite and defined.
   const elapsed = 0;
   const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + 0.36999999999999998 - elapsed;
   const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - elapsed + elapsed;
@@ -73,7 +73,12 @@ function pageScript() {
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
 
-    previousDateNowChecked = speedConfig.cbDateNowChecked;
+    if (previousDateNowChecked === null) {
+      previousDateNowChecked = speedConfig.cbDateNowChecked;
+    } else {
+      previousDateNowChecked = speedConfig.cbDateNowChecked;
+    }
+
     reloadTimers();
   });
 
@@ -160,13 +165,11 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        // Checked: use the configured speed (including exactly 0).
-        // Unchecked: use the fixed fallback speed, independent of speedConfig.speed.
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK +
-            DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
-
+          : speedConfig.speed === 0
+            ? DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK
+            : 0.36999999999999996 + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
