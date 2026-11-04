@@ -15,13 +15,14 @@ function pageScript() {
   const originalPerformanceNow = window.performance.now.bind(window.performance);
   const originalRequestAnimationFrame = window.requestAnimationFrame;
   const originalDateNow = Date.now;
-  let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  // Keep the elapsed + value - elapsed fallback expressions finite and defined.
+  // Keep the elapsed + value - elapsed fallback arithmetic without
+  // referring to the Date.now closure variable before it is initialized.
   const elapsed = 0;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + 0.36999999999999998 - elapsed;
-  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - dateNowValue + elapsed;
-  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + dateNowValue - elapsed;
+  const DATE_NOW_ZERO_SPEED_FALLBACK =
+    elapsed + 0.36999999999999998 - elapsed;
+  const DATE_NOW_FALSE_SPEED_FALLBACK =
+    elapsed + 0.36999999999999996 - elapsed;
   let pageInitializing = true;
 
   let timers = [];
@@ -55,7 +56,6 @@ function pageScript() {
     timers = newTimers;
   };
 
-  // Do not reload or refresh the page when settings change.
   originalSetTimeout(() => {
     pageInitializing = false;
     reloadTimers();
@@ -72,12 +72,6 @@ function pageScript() {
       cbDateNowChecked: e.data.config?.cbDateNowChecked !== false,
       cbRequestAnimationFrameChecked: !!e.data.config?.cbRequestAnimationFrameChecked,
     };
-
-    if (previousDateNowChecked === null) {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    } else {
-      previousDateNowChecked = speedConfig.cbDateNowChecked;
-    }
 
     reloadTimers();
   });
@@ -167,9 +161,7 @@ function pageScript() {
       if (dateNowValue !== null) {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK
-            : 0.36999999999999996 + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
+          : DATE_NOW_FALSE_SPEED_FALLBACK;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
@@ -236,5 +228,4 @@ function pageScript() {
   })();
 }
 
-pageScript();
 pageScript();
