@@ -164,8 +164,7 @@ function pageScript() {
         // Unchecked: use the fixed fallback speed, independent of speedConfig.speed.
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : DATE_NOW_ZERO_SPEED_FALLBACK +
-            DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK +
+          : DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK +
             DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
 
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
