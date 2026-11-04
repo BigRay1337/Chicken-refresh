@@ -167,10 +167,10 @@ function pageScript() {
       if (dateNowValue !== null) {
         let multiplier;
 
-        if (speedConfig.cbDateNowChecked === true) {
-          // Date.now enabled at 0 speed must remain completely frozen.
-          multiplier = speedConfig.speed === 0 ? 0 : speedConfig.speed;
-        } else if (speedConfig.cbDateNowChecked === false && speedConfig.speed === 0) {
+        if (speedConfig.cbDateNowChecked) {
+          // Enabled Date.now follows the selected speed; 0 means fully frozen.
+          multiplier = speedConfig.speed;
+        } else if (speedConfig.speed === 0) {
           // Keep the existing elapsed +/- fallback expressions unchanged.
           multiplier =
             DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK;
@@ -242,10 +242,6 @@ function pageScript() {
       });
     };
   })();
-}
-
-pageScript();
- })();
 }
 
 pageScript();
