@@ -19,7 +19,7 @@ function pageScript() {
   const STARTUP_INTERVAL_MS = 1;
   // Date.now uses the configured speed when enabled and real time when disabled.
   // Keep the false-state fallback at 1 so disabling the override unfreezes time.
-  const DATE_NOW_FALSE_SPEED_FALLBACK = 1;
+  const DATE_NOW_FALSE_SPEED_FALLBACK = DATE_NOW_FALSE_SPEED_FALLBACK;
   let pageInitializing = true;
 
   let timers = [];
