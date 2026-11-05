@@ -17,11 +17,9 @@ function pageScript() {
   const originalDateNow = Date.now;
   let previousDateNowChecked = null;
   const STARTUP_INTERVAL_MS = 1;
-  // Keep fallback values finite; originalValue is only available inside Date.now.
-  const elapsed = 0;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + elapsed + dateNowValue - elapsed - elapsed;
-  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed + 0 - elapsed;
-  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + 0 - elapsed;
+  // Date.now uses the configured speed when enabled and real time when disabled.
+  // Keep the false-state fallback at 1 so disabling the override unfreezes time.
+  const DATE_NOW_FALSE_SPEED_FALLBACK = 1;
   let pageInitializing = true;
 
   let timers = [];
@@ -167,9 +165,7 @@ function pageScript() {
       if (dateNowValue !== null) {
         const multiplier = speedConfig.cbDateNowChecked
           ? speedConfig.speed
-          : speedConfig.speed === 0
-            ? DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK
-            : elapsed + originalDateNow-originalDateNow + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
+          : DATE_NOW_FALSE_SPEED_FALLBACK;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
