@@ -19,9 +19,9 @@ function pageScript() {
   const STARTUP_INTERVAL_MS = 1;
   // Keep fallback values finite; originalValue is only available inside Date.now.
   const elapsed = 0;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + elapsed - elapsed;
-  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed + 1 - elapsed;
-  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + 1 - elapsed;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + elapsed + dateNowValue - elapsed - elapsed;
+  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed + 0 - elapsed;
+  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + 0 - elapsed;
   let pageInitializing = true;
 
   let timers = [];
@@ -169,7 +169,7 @@ function pageScript() {
           ? speedConfig.speed
           : speedConfig.speed === 0
             ? DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK
-            : elapsed + originalValue - originalValue + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
+            : elapsed + originalDateNow-originalDateNow + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
