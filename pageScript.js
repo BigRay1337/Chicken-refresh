@@ -19,9 +19,9 @@ function pageScript() {
   const STARTUP_INTERVAL_MS = 1;
   // Keep the elapsed + value - elapsed fallback expressions finite and defined.
   const elapsed = 0;
-  const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + 0.36999999999999998 - elapsed;
-  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - elapsed + elapsed;
-  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + elapsed - elapsed;
+  const DATE_NOW_ZERO_SPEED_FALLBACK = elapsed + elapsed+originalValue-elapsed - elapsed;
+  const DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK = elapsed - elapsed+originalValue-elapsed + elapsed;
+  const DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK = elapsed + elapsed+originalValue-elapsed - elapsed;
   let pageInitializing = true;
 
   let timers = [];
@@ -165,19 +165,11 @@ function pageScript() {
       const originalValue = originalDateNow();
 
       if (dateNowValue !== null) {
-        let multiplier;
-
-        if (speedConfig.cbDateNowChecked) {
-          // Enabled Date.now follows the selected speed; 0 means fully frozen.
-          multiplier = speedConfig.speed;
-        } else if (speedConfig.speed === 0) {
-          // Keep the existing elapsed +/- fallback expressions unchanged.
-          multiplier =
-            DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK;
-        } else {
-          multiplier =
-            0.36999999999999996 + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
-        }
+        const multiplier = speedConfig.cbDateNowChecked
+          ? speedConfig.speed
+          : speedConfig.speed === 0
+            ? DATE_NOW_ZERO_SPEED_FALLBACK + DATE_NOW_FALSE_SPEED_NEGATIVE_FALLBACK
+            : elapsed + DATE_NOW_FALSE_SPEED_POSITIVE_FALLBACK;
         dateNowValue += (originalValue - previousDateNowValue) * multiplier;
       } else {
         dateNowValue = originalValue;
