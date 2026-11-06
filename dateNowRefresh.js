@@ -207,8 +207,10 @@
     }
 
     if (latestConfig) {
+      // Restore the real Date.now clock before the game refresh begins.
+      // The existing Date.now wrapper uses originalDateNow when this is true.
       const swipeConfig = Object.assign({}, latestConfig, {
-        cbDateNowChecked: false,
+        cbDateNowChecked: true,
         cbRequestAnimationFrameChecked: false
       });
       latestConfig = swipeConfig;
