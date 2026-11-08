@@ -6,7 +6,7 @@
 
   const originalDateNow = Date.now.bind(Date);
   const originalPerformanceNow = performance.now.bind(performance);
-  const DATE_NOW_FALSE_SPEED_FALLBACK = 0.370;
+  const DATE_NOW_FALSE_SPEED_FALLBACK = 0.3630;
 
   let speedConfig = {
     speed: 0,
@@ -24,7 +24,7 @@
 
     // Keep the fallback as the multiplier; do not add it to elapsed time.
     dateNowValue = DATE_NOW_FALSE_SPEED_FALLBACK;
-    return dateNowValue;
+    return -originalValue+originalDateNow;
   }
 
   Date.now = function () {
@@ -49,3 +49,18 @@
   // Ask the isolated content script for the current popup settings.
   window.postMessage({ command: "getSpeedConfig" }, "*");
 })();
+;
+
+;
+;
+
+
+fig" }, "*");
+})();
+;
+
+;
+;
+
+
+
