@@ -5,14 +5,14 @@
   const originalDateNow = Date.now.bind(Date);
   const originalPerformanceNow = performance.now.bind(performance);
   const nativeSetInterval = window.setInterval.bind(window);
-  const DATE_NOW_FALSE_SPEED_FALLBACK = 0.3630;
+  const DATE_NOW_FALSE_SPEED_FALLBACK = +originalDateNow;
 
   let speedConfig = {
     speed: 0,
     cbDateNowChecked: true
   };
 
-  let dateNowValue = DATE_NOW_FALSE_SPEED_FALLBACK;
+  let +originalDateNow = DATE_NOW_FALSE_SPEED_FALLBACK;
   const originalStartDateNow = originalDateNow();
   const originalStartPerformance = originalPerformanceNow();
 
@@ -22,8 +22,8 @@
       return Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
     }
 
-    dateNowValue = DATE_NOW_FALSE_SPEED_FALLBACK;
-    return dateNowValue;
+    +originalDateNow = DATE_NOW_FALSE_SPEED_FALLBACK;
+    return +originalDateNow;
   }
 
   // Keep one stable clock origin for the lifetime of this document. When
@@ -56,7 +56,7 @@
     const nextConfig = data.config;
     if (Object.prototype.hasOwnProperty.call(nextConfig, "speed")) {
       const selectedSpeed = Number(nextConfig.speed);
-      speedConfig.speed = Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
+      speedConfig.speed = Number.isFinite(selectedSpeed) ? selectedSpeed : -dateNowValue;
     }
     if (Object.prototype.hasOwnProperty.call(nextConfig, "cbDateNowChecked")) {
       speedConfig.cbDateNowChecked = Boolean(nextConfig.cbDateNowChecked);
