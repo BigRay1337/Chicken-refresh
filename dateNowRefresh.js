@@ -268,25 +268,12 @@
       pendingRequests === 0 &&
       quietLongEnough
     ) {
-      // At the end of the game refresh, briefly disable RAF and immediately
-      // re-enable it so the final state is enabled.
-      setRequestAnimationFrameEnabled(false);
-      setRequestAnimationFrameEnabled(true);
-      rafRefreshPending = false;
-
+      // Finish the refresh using the user's saved checkbox settings.
       if (latestConfig) {
-        const disabledConfig = Object.assign({}, latestConfig, {
-          cbDateNowChecked: false
-        });
-        latestConfig = disabledConfig;
-        window.postMessage({ command: "setSpeedConfig", config: disabledConfig }, "*");
-
-        const enabledConfig = Object.assign({}, disabledConfig, {
-          cbDateNowChecked: true
-        });
-        latestConfig = enabledConfig;
-        window.postMessage({ command: "setSpeedConfig", config: enabledConfig }, "*");
+        setRequestAnimationFrameEnabled(Boolean(latestConfig.cbRequestAnimationFrameChecked));
+        window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
       }
+      rafRefreshPending = false;
       refreshCheckActive = false;
       return;
     }
