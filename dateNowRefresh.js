@@ -17,16 +17,10 @@
   let rafRefreshPending = false;
   let refreshPageLoaded = document.readyState === "complete";
   const RAF_REFRESH_SESSION_KEY = "__chicken_raf_refresh_pending";
-  const REFRESH_CONFIG_SESSION_KEY = "__chicken_refresh_saved_config";
-  let savedRefreshConfig = null;
 
   try {
     rafRefreshPending = sessionStorage.getItem(RAF_REFRESH_SESSION_KEY) === "1";
-    if (rafRefreshPending) {
-      sessionStorage.removeItem(RAF_REFRESH_SESSION_KEY);
-      const savedConfigText = sessionStorage.getItem(REFRESH_CONFIG_SESSION_KEY);
-      if (savedConfigText) savedRefreshConfig = JSON.parse(savedConfigText);
-    }
+    if (rafRefreshPending) sessionStorage.removeItem(RAF_REFRESH_SESSION_KEY);
   } catch (error) {
     // Session storage may be unavailable in restricted browsing contexts.
   }
@@ -157,11 +151,6 @@
     const data = event && event.data;
     if (data && data.command === "setSpeedConfig" && data.config) {
       latestConfig = data.config;
-      if (rafRefreshPending && savedRefreshConfig) {
-        // Restore the user's saved speed/options instead of content-script defaults.
-        latestConfig = Object.assign({}, data.config, savedRefreshConfig);
-        window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
-      }
       if (rafRefreshPending) {
         // Keep RAF unfrozen during document initialization. Enable it only
         // after load, including when the config arrives after the load event.
@@ -173,15 +162,7 @@
   window.addEventListener("load", function () {
     refreshPageLoaded = true;
     if (rafRefreshPending) {
-      if (savedRefreshConfig) {
-        const restoredConfig = Object.assign({}, latestConfig || {}, savedRefreshConfig);
-        latestConfig = restoredConfig;
-        window.postMessage({ command: "setSpeedConfig", config: restoredConfig }, "*");
-        try { sessionStorage.removeItem(REFRESH_CONFIG_SESSION_KEY); } catch (error) {}
-        savedRefreshConfig = null;
-      } else {
-        setRequestAnimationFrameEnabled(true);
-      }
+      setRequestAnimationFrameEnabled(true);
       // Begin checking on the refreshed document, not the document that
       // received the swipe (which is replaced by location.reload()).
       refreshCheckActive = true;
@@ -220,10 +201,6 @@
     rafRefreshPending = true;
     refreshPageLoaded = false;
     try {
-      // Carry active extension settings into the freshly injected scripts.
-      if (latestConfig) {
-        sessionStorage.setItem(REFRESH_CONFIG_SESSION_KEY, JSON.stringify(latestConfig));
-      }
       sessionStorage.setItem(RAF_REFRESH_SESSION_KEY, "1");
     } catch (error) {
       // The current-page enable still works if session storage is unavailable.
@@ -268,12 +245,25 @@
       pendingRequests === 0 &&
       quietLongEnough
     ) {
-      // Finish the refresh using the user's saved checkbox settings.
-      if (latestConfig) {
-        setRequestAnimationFrameEnabled(Boolean(latestConfig.cbRequestAnimationFrameChecked));
-        window.postMessage({ command: "setSpeedConfig", config: latestConfig }, "*");
-      }
+      // At the end of the game refresh, briefly disable RAF and immediately
+      // re-enable it so the final state is enabled.
+      setRequestAnimationFrameEnabled(false);
+      setRequestAnimationFrameEnabled(true);
       rafRefreshPending = false;
+
+      if (latestConfig) {
+        const disabledConfig = Object.assign({}, latestConfig, {
+          cbDateNowChecked: false
+        });
+        latestConfig = disabledConfig;
+        window.postMessage({ command: "setSpeedConfig", config: disabledConfig }, "*");
+
+        const enabledConfig = Object.assign({}, disabledConfig, {
+          cbDateNowChecked: true
+        });
+        latestConfig = enabledConfig;
+        window.postMessage({ command: "setSpeedConfig", config: enabledConfig }, "*");
+      }
       refreshCheckActive = false;
       return;
     }
