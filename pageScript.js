@@ -22,9 +22,9 @@
       return Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
     }
 
-    // Keep the fallback as the multiplier; do not add it to elapsed time.
+    // FALSE releases Date.now from the selected 0-speed freeze.
     dateNowValue = DATE_NOW_FALSE_SPEED_FALLBACK;
-    return -originalValue+originalDateNow;
+    return dateNowValue;
   }
 
   Date.now = function () {
@@ -49,18 +49,3 @@
   // Ask the isolated content script for the current popup settings.
   window.postMessage({ command: "getSpeedConfig" }, "*");
 })();
-;
-
-;
-;
-
-
-fig" }, "*");
-})();
-;
-
-;
-;
-
-
-
