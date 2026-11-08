@@ -258,11 +258,8 @@
         latestConfig = disabledConfig;
         window.postMessage({ command: "setSpeedConfig", config: disabledConfig }, "*");
 
-        const enabledConfig = Object.assign({}, disabledConfig, {
-          cbDateNowChecked: true
-        });
-        latestConfig = enabledConfig;
-        window.postMessage({ command: "setSpeedConfig", config: enabledConfig }, "*");
+        // Keep Date.now released after the swipe refresh. The 0-speed
+        // setting remains active only until the user performs this gesture.
       }
       refreshCheckActive = false;
       return;
