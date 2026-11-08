@@ -1,17 +1,17 @@
 // Date.now speed controller for the MAIN world.
-// TRUE uses the selected speed (including 0); FALSE uses the fallback
-// multiplier so the game clock continues moving instead of remaining frozen.
 (function () {
   "use strict";
 
   const originalDateNow = Date.now.bind(Date);
   const originalPerformanceNow = performance.now.bind(performance);
+  const nativeSetInterval = window.setInterval.bind(window);
   const DATE_NOW_FALSE_SPEED_FALLBACK = 0.3630;
 
   let speedConfig = {
     speed: 0,
     cbDateNowChecked: true
   };
+
   let dateNowValue = DATE_NOW_FALSE_SPEED_FALLBACK;
   const originalStartDateNow = originalDateNow();
   const originalStartPerformance = originalPerformanceNow();
@@ -22,15 +22,32 @@
       return Number.isFinite(selectedSpeed) ? selectedSpeed : 0;
     }
 
-    // Keep the fallback as the multiplier; do not add it to elapsed time.
     dateNowValue = DATE_NOW_FALSE_SPEED_FALLBACK;
-    return -originalValue+originalDateNow;
+    return dateNowValue;
   }
 
-  Date.now = function () {
+  // Keep one stable clock origin for the lifetime of this document. When
+  // speed is 0, Date.now() remains frozen at originalStartDateNow.
+  function controlledDateNow() {
     const elapsed = originalPerformanceNow() - originalStartPerformance;
     return originalStartDateNow + elapsed * getDateNowSpeed();
-  };
+  }
+
+  function keepDateNowControlled() {
+    if (Date.now !== controlledDateNow) {
+      try {
+        Date.now = controlledDateNow;
+      } catch (error) {
+        // Retry on the next watchdog tick if another script blocks assignment.
+      }
+    }
+  }
+
+  Date.now = controlledDateNow;
+
+  // Some games replace Date.now during in-game transitions without reloading
+  // the tab. Re-apply the same controller without resetting its frozen origin.
+  nativeSetInterval(keepDateNowControlled, 100);
 
   window.addEventListener("message", function (event) {
     const data = event && event.data;
@@ -44,23 +61,9 @@
     if (Object.prototype.hasOwnProperty.call(nextConfig, "cbDateNowChecked")) {
       speedConfig.cbDateNowChecked = Boolean(nextConfig.cbDateNowChecked);
     }
+
+    keepDateNowControlled();
   });
 
-  // Ask the isolated content script for the current popup settings.
   window.postMessage({ command: "getSpeedConfig" }, "*");
 })();
-;
-
-;
-;
-
-
-fig" }, "*");
-})();
-;
-
-;
-;
-
-
-
