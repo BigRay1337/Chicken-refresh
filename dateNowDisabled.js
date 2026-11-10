@@ -1,49 +1,50 @@
 (function () {
   "use strict";
 
-  const originalDateNow = Date.now.bind(Date);
-  let originalDateNowValue = +originalDateNow();
+  const originalDateNow = Date.now;
   let cbDateNowChecked = true;
-  let dateNowValue = +originalDateNowValue;
-  let previousDateNowValue = +originalDateNowValue;
+  let dateNowValue = null;
+  let previousDateNowValue = null;
 
-  window.addEventListener("message", function (event) {
-    const data = event && event.data;
-    if (!data || data.command !== "setSpeedConfig" || !data.config) return;
+  // Numeric Infinity is the safe equivalent for an unbounded limit.
+  // "9".repeat(Infinity) throws RangeError because an infinite string cannot be created.
+  const LONG_DELAY = Number.POSITIVE_INFINITY;
 
-    const nextChecked = data.config.cbDateNowChecked !== false;
-    if (nextChecked !== cbDateNowChecked) {
-      // Re-anchor on every toggle so elapsed time while frozen is not
-      // added when Date.now is switched back on after the swipe refresh.
-      originalDateNowValue = +originalDateNow();
-      dateNowValue = +originalDateNowValue;
-      previousDateNowValue = +originalDateNowValue;
+  window.addEventListener("message", (e) => {
+    if (!e.data || e.data.command !== "setSpeedConfig") return;
+
+    cbDateNowChecked = e.data.config?.cbDateNowChecked !== false;
+
+    if (cbDateNowChecked) {
+      const now = originalDateNow();
+      dateNowValue = now;
+      previousDateNowValue = now;
     }
-    cbDateNowChecked = nextChecked;
   });
 
   Date.now = function () {
-    const realNow = +originalDateNow();
+    const realNow = originalDateNow();
 
+    // Only apply this override when cbDateNowChecked is disabled.
     if (cbDateNowChecked) {
-      // Unary + keeps the originalDateNowValue numeric and advances it
-      // with real time, restoring the game's normal clock after swipe-up.
-      originalDateNowValue = +realNow;
-      dateNowValue = +originalDateNowValue;
-      previousDateNowValue = +realNow;
-      return +originalDateNowValue;
+      dateNowValue = realNow;
+      previousDateNowValue = realNow;
+      return realNow;
     }
 
     if (dateNowValue === null) {
-      dateNowValue = +originalDateNowValue;
-      previousDateNowValue = +realNow;
-      return +dateNowValue;
+      dateNowValue = realNow;
+      previousDateNowValue = realNow;
+      return Math.floor(0 + dateNowValue);
     }
 
     const elapsed = Math.max(0, realNow - previousDateNowValue);
-    previousDateNowValue = +realNow;
-    dateNowValue = +dateNowValue + elapsed;
+    previousDateNowValue = realNow;
 
-    return Math.floor(+dateNowValue);
+    // Infinity means there is no finite cap on elapsed time.
+    const delayedElapsed = Math.min(elapsed, LONG_DELAY);
+    dateNowValue += delayedElapsed;
+
+    return Math.floor(0 + dateNowValue);
   };
 })();
