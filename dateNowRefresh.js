@@ -1,70 +1,276 @@
+// Detect the game's upward-swipe refresh gesture. Keep Date.now enabled while
+// the refresh produces network/DOM activity, then disable it after requests
+// finish and the page has been quiet. This does not reload the browser tab.
 (function () {
-  const SWIPE_THRESHOLD_PX = 30;
-  const SWIPE_DELAY_MS = 4321;
+  const SWIPE_UP_THRESHOLD_PX = 30;
+  const QUIET_WINDOW_MS = 750;
+  const MIN_REFRESH_WINDOW_MS = 750;
+  const CHECK_INTERVAL_MS = 50;
+  const nativeSetTimeout = window.setTimeout.bind(window);
+  const nativeDateNow = Date.now.bind(Date);
+  const nativeFetch = typeof window.fetch === "function"
+    ? window.fetch.bind(window)
+    : null;
+  const NativeXHR = window.XMLHttpRequest;
 
-  let cbDateNowChecked = true;
+  let latestConfig = null;
+  let rafRefreshPending = false;
+  let refreshPageLoaded = document.readyState === "complete";
+  const RAF_REFRESH_SESSION_KEY = "__chicken_raf_refresh_pending";
 
-  function setDateNowChecked(enabled) {
-    cbDateNowChecked = enabled;
-
-    window.postMessage({
-      command: "setSpeedConfig",
-      config: {
-        cbDateNowChecked: enabled,
-      },
-    });
+  try {
+    rafRefreshPending = sessionStorage.getItem(RAF_REFRESH_SESSION_KEY) === "1";
+    if (rafRefreshPending) sessionStorage.removeItem(RAF_REFRESH_SESSION_KEY);
+  } catch (error) {
+    // Session storage may be unavailable in restricted browsing contexts.
   }
 
-  window.addEventListener("message", (event) => {
-    if (!event.data) return;
+  function setRequestAnimationFrameEnabled(enabled) {
+    if (!latestConfig) return;
+    const nextConfig = Object.assign({}, latestConfig, {
+      cbRequestAnimationFrameChecked: enabled
+    });
+    latestConfig = nextConfig;
+    window.postMessage({ command: "setSpeedConfig", config: nextConfig }, "*");
+  }
 
-    if (
-      event.data.command === "setSpeedConfig" &&
-      typeof event.data.config?.cbDateNowChecked === "boolean"
-    ) {
-      cbDateNowChecked = event.data.config.cbDateNowChecked;
+  let touchStartY = null;
+  let refreshCheckActive = rafRefreshPending;
+  let refreshActivitySeen = rafRefreshPending;
+  let pendingRequests = 0;
+  let refreshStartedAt = rafRefreshPending ? nativeDateNow() : 0;
+  let lastActivityAt = refreshStartedAt;
+  let domObserver = null;
+  let pageLoadSeen = document.readyState === "complete";
+
+  function markActivity() {
+    if (!refreshCheckActive) return;
+    refreshActivitySeen = true;
+    lastActivityAt = nativeDateNow();
+  }
+
+  window.addEventListener("load", function () {
+    pageLoadSeen = true;
+    markActivity();
+  }, { once: true });
+
+  document.addEventListener("readystatechange", function () {
+    if (document.readyState === "complete") {
+      pageLoadSeen = true;
+      markActivity();
     }
   });
 
-  window.postMessage({ command: "getSpeedConfig" });
+  if (nativeFetch) {
+    window.fetch = function () {
+      pendingRequests += 1;
+      markActivity();
+      let request;
+      try {
+        request = nativeFetch.apply(this, arguments);
+      } catch (error) {
+        pendingRequests = Math.max(0, pendingRequests - 1);
+        markActivity();
+        throw error;
+      }
+      return request.then(
+        function (response) {
+          pendingRequests = Math.max(0, pendingRequests - 1);
+          markActivity();
+          return response;
+        },
+        function (error) {
+          pendingRequests = Math.max(0, pendingRequests - 1);
+          markActivity();
+          throw error;
+        }
+      );
+    };
+  }
 
-  let swipeStartX = null;
-  let swipeStartY = null;
+  if (NativeXHR && NativeXHR.prototype) {
+    const originalOpen = NativeXHR.prototype.open;
+    const originalSend = NativeXHR.prototype.send;
 
-  window.addEventListener("touchstart", (event) => {
-    if (!event.touches || event.touches.length !== 1) return;
+    NativeXHR.prototype.open = function () {
+      this.__dateNowRefreshTracked = false;
+      return originalOpen.apply(this, arguments);
+    };
 
-    swipeStartX = event.touches[0].clientX;
-    swipeStartY = event.touches[0].clientY;
-  }, { passive: true });
+    NativeXHR.prototype.send = function () {
+      if (!this.__dateNowRefreshTracked) {
+        this.__dateNowRefreshTracked = true;
+        pendingRequests += 1;
+        markActivity();
 
-  window.addEventListener("touchend", (event) => {
-    if (swipeStartX === null || swipeStartY === null) return;
-    if (!event.changedTouches || event.changedTouches.length !== 1) return;
+        const finish = () => {
+          if (!this.__dateNowRefreshTracked) return;
+          this.__dateNowRefreshTracked = false;
+          pendingRequests = Math.max(0, pendingRequests - 1);
+          markActivity();
+        };
 
-    const endX = event.changedTouches[0].clientX;
-    const endY = event.changedTouches[0].clientY;
-    const deltaX = endX - swipeStartX;
-    const deltaY = endY - swipeStartY;
+        this.addEventListener("loadend", finish, { once: true });
+        this.addEventListener("error", finish, { once: true });
+        this.addEventListener("abort", finish, { once: true });
+      }
 
-    swipeStartX = null;
-    swipeStartY = null;
+      try {
+        return originalSend.apply(this, arguments);
+      } catch (error) {
+        if (this.__dateNowRefreshTracked) {
+          this.__dateNowRefreshTracked = false;
+          pendingRequests = Math.max(0, pendingRequests - 1);
+          markActivity();
+        }
+        throw error;
+      }
+    };
+  }
 
-    if (
-      deltaY > -SWIPE_THRESHOLD_PX ||
-      Math.abs(deltaX) > Math.abs(deltaY)
-    ) {
+  function observePage() {
+    if (domObserver || !document.documentElement) return;
+    domObserver = new MutationObserver(function () {
+      markActivity();
+    });
+    domObserver.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true
+    });
+  }
+
+  if (document.documentElement) {
+    observePage();
+  } else {
+    document.addEventListener("DOMContentLoaded", observePage, { once: true });
+  }
+
+  window.addEventListener("message", function (event) {
+    const data = event && event.data;
+    if (data && data.command === "setSpeedConfig" && data.config) {
+      latestConfig = data.config;
+      if (rafRefreshPending) {
+        // Keep RAF unfrozen during document initialization. Enable it only
+        // after load, including when the config arrives after the load event.
+        setRequestAnimationFrameEnabled(refreshPageLoaded);
+      }
+    }
+  });
+
+  window.addEventListener("load", function () {
+    refreshPageLoaded = true;
+    if (rafRefreshPending) {
+      setRequestAnimationFrameEnabled(true);
+      // Begin checking on the refreshed document, not the document that
+      // received the swipe (which is replaced by location.reload()).
+      refreshCheckActive = true;
+      refreshActivitySeen = true;
+      refreshStartedAt = nativeDateNow();
+      lastActivityAt = refreshStartedAt;
+      nativeSetTimeout(checkRefreshCompletion, CHECK_INTERVAL_MS);
+    }
+  }, { once: true });
+
+  window.addEventListener("touchstart", function (event) {
+    if (!event.touches || event.touches.length !== 1) {
+      touchStartY = null;
+      return;
+    }
+    touchStartY = event.touches[0].clientY;
+  }, { capture: true, passive: true });
+
+  // Bubble phase lets the game's touchend handler initiate its refresh first.
+  window.addEventListener("touchend", function (event) {
+    if (touchStartY === null || !event.changedTouches || !event.changedTouches.length) {
+      touchStartY = null;
       return;
     }
 
-    // Wait 1432 ms before the swipe can interact with the extension.
-    setTimeout(() => {
-      // 1. Disable Date.now.
-      setDateNowChecked(false);
+    const swipeUpDistance = touchStartY - event.changedTouches[0].clientY;
+    touchStartY = null;
 
-      // 2. Refresh the game afterward.
+    if (swipeUpDistance < SWIPE_UP_THRESHOLD_PX || refreshCheckActive) {
+      return;
+    }
+
+    // Record the 30 px swipe. RAF stays unfrozen during document loading,
+    // is enabled after the refreshed document's load event and stays enabled
+    // when refresh activity has settled.
+    rafRefreshPending = true;
+    refreshPageLoaded = false;
+    try {
+      sessionStorage.setItem(RAF_REFRESH_SESSION_KEY, "1");
+    } catch (error) {
+      // The current-page enable still works if session storage is unavailable.
+    }
+
+    if (latestConfig) {
+      const swipeConfig = Object.assign({}, latestConfig, {
+        cbDateNowChecked: false,
+        cbRequestAnimationFrameChecked: false
+      });
+      latestConfig = swipeConfig;
+      window.postMessage({ command: "setSpeedConfig", config: swipeConfig }, "*");
+    }
+
+    // A swipe of at least 30 px refreshes the website after the config is set.
+    refreshCheckActive = true;
+    nativeSetTimeout(function () {
       window.location.reload();
-    }, SWIPE_DELAY_MS);
-  }, { passive: true });
-})();
+    }, 50);
 
+    refreshActivitySeen = false;
+    refreshStartedAt = nativeDateNow();
+    lastActivityAt = refreshStartedAt;
+
+    // Let the current touch event dispatch finish before checking for refresh
+    // activity. If the document is still loading, wait for its load event too.
+    nativeSetTimeout(checkRefreshCompletion, 0);
+  }, { capture: false, passive: true });
+
+  function checkRefreshCompletion() {
+    if (!refreshCheckActive) return;
+
+    const now = nativeDateNow();
+    const minimumRefreshWindowPassed = now - refreshStartedAt >= MIN_REFRESH_WINDOW_MS;
+    const quietLongEnough = now - lastActivityAt >= QUIET_WINDOW_MS;
+    const documentLoaded = pageLoadSeen || document.readyState === "complete";
+
+    if (
+      minimumRefreshWindowPassed &&
+      documentLoaded &&
+      refreshActivitySeen &&
+      pendingRequests === 0 &&
+      quietLongEnough
+    ) {
+      // At the end of the game refresh, briefly disable RAF and immediately
+      // re-enable it so the final state is enabled.
+      setRequestAnimationFrameEnabled(false);
+      setRequestAnimationFrameEnabled(true);
+      rafRefreshPending = false;
+
+      if (latestConfig) {
+        const disabledConfig = Object.assign({}, latestConfig, {
+          cbDateNowChecked: false
+        });
+        latestConfig = disabledConfig;
+        window.postMessage({ command: "setSpeedConfig", config: disabledConfig }, "*");
+
+        const enabledConfig = Object.assign({}, disabledConfig, {
+          cbDateNowChecked: true
+        });
+        latestConfig = enabledConfig;
+        window.postMessage({ command: "setSpeedConfig", config: enabledConfig }, "*");
+      }
+      refreshCheckActive = false;
+      return;
+    }
+
+    // Keep waiting while loading or while detectable refresh activity continues.
+    // Canvas-only refreshes that produce no network/DOM signals cannot be
+    // reliably distinguished from a swipe that did not refresh the game.
+    nativeSetTimeout(checkRefreshCompletion, CHECK_INTERVAL_MS);
+  }
+})();
